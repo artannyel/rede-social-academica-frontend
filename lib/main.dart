@@ -2,10 +2,23 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:social_academic/features/authentication/data/datasources/auth_remote_datasource.dart';
+import 'package:social_academic/app/core/auth/auth_notifier.dart';
+import 'package:social_academic/app/core/navigation/app_router.dart';
+import 'package:social_academic/app/core/theme/app_theme.dart';
+import 'package:social_academic/app/core/theme/theme_notifier.dart';
+import 'package:social_academic/features/authentication/data/repositories/auth_repository_impl.dart';
+import 'package:social_academic/features/authentication/domain/repositories/auth_repository.dart';
+import 'package:social_academic/features/authentication/domain/usecases/login.dart';
+import 'package:social_academic/features/authentication/domain/usecases/register.dart';
+import 'package:social_academic/features/authentication/presentation/provider/login_change_notifier.dart';
+import 'package:social_academic/features/authentication/presentation/provider/register_change_notifier.dart';
 import 'package:social_academic/firebase_options.dart';
 
 late final FirebaseApp app;
 late final FirebaseAuth auth;
+late final Dio dio;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,133 +28,73 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   auth = FirebaseAuth.instanceFor(app: app);
+  dio = Dio(BaseOptions(baseUrl: 'http://192.168.0.10:8888/api/v1'));
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
+    return MultiProvider(
+      providers: [
+        // Dependências Externas
+        // Este notifier irá ouvir as mudanças de autenticação do Firebase
+        ChangeNotifierProvider<AuthNotifier>(
+          create: (context) => AuthNotifier(auth),
+        ),
+        ChangeNotifierProvider<ThemeNotifier>(
+          create: (context) => ThemeNotifier(),
+        ),
+        Provider<FirebaseAuth>.value(value: auth),
+        Provider<Dio>.value(value: dio),
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+        // Camada de Dados (Data)
+        Provider<AuthRemoteDataSource>(
+          create: (context) => AuthRemoteDataSourceImpl(
+            firebaseAuth: context.read<FirebaseAuth>(),
+            dio: context.read<Dio>(),
+          ),
+        ),
+        Provider<AuthRepository>(
+          create: (context) => AuthRepositoryImpl(
+            remoteDataSource: context.read<AuthRemoteDataSource>(),
+          ),
+        ),
 
-  final String title;
+        // Camada de Domínio (Domain)
+        Provider<Register>(
+          create: (context) => Register(context.read<AuthRepository>()),
+        ),
+        Provider<Login>(
+          create: (context) => Login(context.read<AuthRepository>()),
+        ),
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() async {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-    final user = auth.currentUser;
-    late UserCredential? userLogado;
-    if (user == null) {
-      userLogado = await auth.signInWithEmailAndPassword(
-        email: 'artannyell@gmail.com',
-        password: '12345678',
-      );
-      debugPrint(await userLogado.user?.getIdToken() ?? 'null');
-    }
-
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: 'http://192.168.0.12:8888/api/v1',
-        headers: {
-          'Authorization': 'Bearer ${await user?.getIdToken()}',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+        // Camada de Apresentação (Presentation)
+        ChangeNotifierProvider<RegisterChangeNotifier>(
+          create: (context) => RegisterChangeNotifier(context.read<Register>()),
+        ),
+        ChangeNotifierProvider<LoginChangeNotifier>(
+          create: (context) => LoginChangeNotifier(context.read<Login>()),
+        ),
+      ],
+      // Usamos um Consumer para obter um `context` que está abaixo do MultiProvider
+      // e, assim, ter acesso ao AuthNotifier.
+      child: Consumer<AuthNotifier>(
+        builder: (context, authNotifier, _) {
+          final themeNotifier = Provider.of<ThemeNotifier>(context);
+          return MaterialApp.router(
+            routerConfig: appRouter(authNotifier),
+            debugShowCheckedModeBanner: false,
+            title: 'Social Academic',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeNotifier.themeMode,
+          );
         },
       ),
-    );
-
-    debugPrint(user.toString());
-    final startTime = DateTime.now();
-    debugPrint('Iniciando requisição...');
-    try {
-      final res = await dio.get('/user');
-      debugPrint(res.data.toString());
-      final endTime = DateTime.now();
-      final duration = endTime.difference(startTime).inSeconds;
-
-      debugPrint('Requisição concluída em $duration ms');
-    } catch (e) {
-      debugPrint('Error: ');
-      debugPrint(e.toString());
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
