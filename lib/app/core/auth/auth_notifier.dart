@@ -16,10 +16,20 @@ class AuthNotifier extends ChangeNotifier {
     });
   }
 
+  /// Força a recarga do usuário atual e notifica os ouvintes.
+  /// Isso é útil após a verificação de e-mail, pois authStateChanges não dispara.
+  Future<void> checkEmailVerification() async {
+    final currentUser = _firebaseAuth.currentUser;
+    if (currentUser != null) {
+      await currentUser.reload();
+      _user = _firebaseAuth.currentUser; // Pega a instância atualizada
+      notifyListeners();
+    }
+  }
+
   @override
   void dispose() {
     _authSubscription.cancel();
     super.dispose();
   }
 }
-

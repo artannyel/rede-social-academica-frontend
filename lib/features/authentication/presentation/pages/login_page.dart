@@ -33,7 +33,9 @@ class _LoginPageState extends State<LoginPage> {
     } else if (notifier.state == LoginState.success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Login realizado com sucesso! Bem-vindo de volta, ${notifier.user?.name}!'),
+          content: Text(
+            'Login realizado com sucesso! Bem-vindo de volta, ${notifier.user?.name}!',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -44,7 +46,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
       body: Consumer<LoginChangeNotifier>(
         builder: (context, notifier, child) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -55,39 +56,60 @@ class _LoginPageState extends State<LoginPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(labelText: 'E-mail'),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) => (value?.isEmpty ?? true) ? 'Por favor, insira seu e-mail' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController,
-                        decoration: const InputDecoration(labelText: 'Senha'),
-                        obscureText: true,
-                        validator: (value) => (value?.isEmpty ?? true) ? 'Por favor, insira sua senha' : null,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(onPressed: _submitForm, child: const Text('Entrar')),
-                      const SizedBox(height: 16),
-                      TextButton(
-                        onPressed: () {
-                          context.push('/register'); // Navega para a tela de cadastro
-                        },
-                        child: const Text('Não tem uma conta? Cadastre-se'),
-                      ),
-                    ],
+          return SingleChildScrollView(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 500),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Login', style: Theme.of(context).textTheme.headlineMedium),
+                        const SizedBox(height: 16),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: 300),
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Image.asset(
+                              'assets/images/image_for_login.png',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _emailController,
+                          decoration: const InputDecoration(labelText: 'E-mail'),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) => (value?.isEmpty ?? true)
+                              ? 'Por favor, insira seu e-mail'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _passwordController,
+                          decoration: const InputDecoration(labelText: 'Senha'),
+                          obscureText: true,
+                          validator: (value) => (value?.isEmpty ?? true)
+                              ? 'Por favor, insira sua senha'
+                              : null,
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: _submitForm,
+                          child: const Text('Entrar'),
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () {
+                            context.go('/register'); // Navega para a tela de cadastro
+                          },
+                          child: const Text('Não tem uma conta? Cadastre-se'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

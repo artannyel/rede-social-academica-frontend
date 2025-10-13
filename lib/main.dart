@@ -2,7 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart'; 
+import 'package:url_strategy/url_strategy.dart';
 import 'package:social_academic/features/authentication/data/datasources/auth_remote_datasource.dart';
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/app/core/navigation/app_router.dart';
@@ -23,12 +24,15 @@ late final Dio dio;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Remove o # (hash) da URL na web
+  setPathUrlStrategy();
+
   // We store the app and auth to make testing with a named instance easier.
   app = await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   auth = FirebaseAuth.instanceFor(app: app);
-  dio = Dio(BaseOptions(baseUrl: 'http://192.168.0.10:8888/api/v1'));
+  dio = Dio(BaseOptions(baseUrl: 'http://192.168.3.28:8888/api/v1'));
 
   runApp(const MyApp());
 }
