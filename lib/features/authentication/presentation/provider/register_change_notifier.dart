@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/authentication/domain/entities/user.dart';
 import 'package:social_academic/features/authentication/domain/usecases/register.dart';
-import 'package:social_academic/app/core/error/failure.dart';
 
 enum RegisterState { idle, loading, success, error }
 
 class RegisterChangeNotifier extends ChangeNotifier {
   final Register _registerUseCase;
+  final AuthNotifier _authNotifier;
 
-  RegisterChangeNotifier(this._registerUseCase);
+  RegisterChangeNotifier(this._registerUseCase, this._authNotifier);
 
   RegisterState _state = RegisterState.idle;
   RegisterState get state => _state;
@@ -23,27 +24,46 @@ class RegisterChangeNotifier extends ChangeNotifier {
     required String name,
     required String email,
     required String password,
+    List<Map<String, dynamic>>? userCourses,
   }) async {
+    // Pausa o listener global para evitar o redirecionamento prematuro.
+    _authNotifier.pauseListener();
+
     _state = RegisterState.loading;
     _errorMessage = null;
     notifyListeners();
 
-    try {
-      final registeredUser = await _registerUseCase(
-        name: name,
-        email: email,
-        password: password,
-      );
-      _user = registeredUser;
-      _state = RegisterState.success;
-    } on Failure catch (e) {
-      _errorMessage = e.message;
-      _state = RegisterState.error;
-    } catch (e) {
-      _errorMessage = 'Um erro inesperado ocorreu. Tente novamente mais tarde.';
-      _state = RegisterState.error;
-    } finally {
-      notifyListeners();
-    }
+    final result = await _registerUseCase(
+      name: name,
+      email: email,
+      password: password,
+      userCourses: userCourses,
+    );
+
+    result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        _state = RegisterState.error;
+        // Em caso de erro, apenas reativamos o listener sem notificar,
+        // para que o app possa reagir a outras ações (como um logout manual),
+        // mas sem causar um redirecionamento.
+        _authNotifier.resumeListener(notify: false);
+      },
+      (user) {
+        _user = user;
+        _state = RegisterState.success;
+        // Em caso de sucesso, reativamos o listener e notificamos,
+        // para que o GoRouter possa redirecionar para a tela de verificação.
+        _authNotifier.resumeListener();
+      },
+    );
+
+    notifyListeners();
+  }
+
+  /// Reseta o estado para o valor inicial, evitando que ações sejam repetidas.
+  void resetState() {
+    _state = RegisterState.idle;
+    _errorMessage = null;
   }
 }

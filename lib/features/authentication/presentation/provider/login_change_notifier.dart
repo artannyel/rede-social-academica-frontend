@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:social_academic/features/authentication/domain/entities/user.dart';
 import 'package:social_academic/features/authentication/domain/usecases/login.dart';
-import 'package:social_academic/app/core/error/failure.dart';
+import 'package:social_academic/features/authentication/domain/usecases/send_password_reset_email.dart';
 
 enum LoginState { idle, loading, success, error }
 
 class LoginChangeNotifier extends ChangeNotifier {
   final Login _loginUseCase;
+  final SendPasswordResetEmail _sendPasswordResetEmailUseCase;
 
-  LoginChangeNotifier(this._loginUseCase);
+  LoginChangeNotifier(
+    this._loginUseCase,
+    this._sendPasswordResetEmailUseCase,
+  );
 
   LoginState _state = LoginState.idle;
   LoginState get state => _state;
@@ -27,21 +31,42 @@ class LoginChangeNotifier extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    try {
-      final loggedInUser = await _loginUseCase(
-        email: email,
-        password: password,
-      );
-      _user = loggedInUser;
-      _state = LoginState.success;
-    } on Failure catch (e) {
-      _errorMessage = e.message; // Usa a mensagem da nossa falha personalizada!
-      _state = LoginState.error;
-    } catch (e) {
-      _errorMessage = 'Um erro inesperado ocorreu. Tente novamente mais tarde.';
-      _state = LoginState.error;
-    } finally {
-      notifyListeners();
-    }
+    final result = await _loginUseCase(
+      email: email,
+      password: password,
+    );
+
+    result.fold(
+      (failure) { // Lado Esquerdo (Erro)
+        _errorMessage = failure.message;
+        _state = LoginState.error;
+      },
+      (user) { // Lado Direito (Sucesso)
+        _user = user;
+        _state = LoginState.success;
+      },
+    );
+
+    notifyListeners();
+  }
+
+  /// Reseta o estado para o valor inicial, evitando que ações sejam repetidas.
+  void resetState() {
+    _state = LoginState.idle;
+    _errorMessage = null;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  /// Envia um e-mail de redefinição de senha e retorna uma mensagem de sucesso ou erro.
+  Future<String> sendPasswordResetEmail(String email) async {
+    final result = await _sendPasswordResetEmailUseCase(email: email);
+    return result.fold(
+      (failure) => failure.message,
+      (_) => 'E-mail de redefinição de senha enviado com sucesso!',
+    );
   }
 }

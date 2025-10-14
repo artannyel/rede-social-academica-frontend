@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:social_academic/app/core/error/failure.dart';
 import '../entities/user.dart';
 import '../repositories/auth_repository.dart';
 
@@ -7,7 +9,10 @@ class Login {
 
   Login(this.repository);
 
-  Future<User> call({required String email, required String password}) {
+  Future<Either<Failure, User>> call({
+    required String email,
+    required String password,
+  }) {
     return repository.login(email: email, password: password);
   }
 }

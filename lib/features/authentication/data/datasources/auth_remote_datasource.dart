@@ -1,12 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:dio/dio.dart'; // Exemplo com Dio para API
-import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 
 // Contrato para a fonte de dados remota
 abstract class AuthRemoteDataSource {
   Future<UserModel> login({required String email, required String password});
-  Future<UserModel> register({required String name, required String email, required String password});
+  Future<UserModel> register({
+    required String name,
+    required String email,
+    required String password,
+    List<Map<String, dynamic>>? userCourses,
+  });
+  Future<void> sendPasswordResetEmail({required String email});
 }
 
 // Implementação que usa Firebase Auth e uma API REST (com Dio)
@@ -17,7 +22,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl({required this.firebaseAuth, required this.dio});
 
   @override
-  Future<UserModel> login({required String email, required String password}) async {
+  Future<UserModel> login({
+    required String email,
+    required String password,
+  }) async {
     // 1. Autentica com Firebase
     final userCredential = await firebaseAuth.signInWithEmailAndPassword(
       email: email,
@@ -37,7 +45,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<UserModel> register({required String name, required String email, required String password}) async {
+  Future<UserModel> register({
+    required String name,
+    required String email,
+    required String password,
+    List<Map<String, dynamic>>? userCourses,
+  }) async {
     // 1. Cria o usuário no Firebase Auth
     final userCredential = await firebaseAuth.createUserWithEmailAndPassword(
       email: email,
@@ -45,18 +58,42 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
     final firebaseUid = userCredential.user!.uid;
 
-    // 2. Envia os dados para sua API para criar o registro no seu banco
-    final response = await dio.post(
-      '/user/register', // Exemplo de endpoint
-      data: {
-        'name': name,
-        'email': email,
-        'firebase_uid': firebaseUid,
-      },
-    );
+    try {
+      // 2. Envia os dados para sua API para criar o registro no seu banco
+      final response = await dio.post(
+        '/user/register', // Exemplo de endpoint
+        data: {
+          'name': name,
+          'email': email,
+          'firebase_uid': firebaseUid,
+          'courses': userCourses, // Envia a lista de cursos e semestres
+        },
+      );
+      // Somente se o passo 2 for bem-sucedido, retornamos o usuário.
+      return UserModel.fromJson(response.data);
+    } on DioException catch (e) {
+      // 3. Se o registro na sua API falhar, deletamos o usuário do Firebase
+      // para evitar dados inconsistentes (usuário órfão).
+      await userCredential.user?.delete();
 
-    debugPrint(response.data.toString());
+      // Tenta extrair uma mensagem de erro específica do corpo da resposta da API.
+      String errorMessage =
+          'Não foi possível concluir o cadastro. Tente novamente.';
+      if (e.response?.data is Map<String, dynamic>) {
+        // Assumindo que sua API retorna um JSON com a chave 'message'.
+        errorMessage = e.response!.data['message'] ?? errorMessage;
+      }
 
-    return UserModel.fromJson(response.data);
+      // Lança a exceção com a mensagem de erro, que será capturada pelo repositório.
+      throw firebase.FirebaseAuthException(
+        code: 'backend-registration-failed',
+        message: errorMessage,
+      );
+    }
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail({required String email}) async {
+    await firebaseAuth.sendPasswordResetEmail(email: email);
   }
 }

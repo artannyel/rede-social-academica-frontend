@@ -1,35 +1,52 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart' as firebase;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AuthNotifier extends ChangeNotifier {
-  final firebase.FirebaseAuth _firebaseAuth;
-  late final StreamSubscription<firebase.User?> _authSubscription;
+  final FirebaseAuth _auth;
+  StreamSubscription<User?>? _authStateSubscription;
 
-  firebase.User? _user;
-  firebase.User? get user => _user;
+  User? _user;
+  User? get user => _user;
+  bool _isListenerPaused = false;
 
-  AuthNotifier(this._firebaseAuth) {
-    _authSubscription = _firebaseAuth.authStateChanges().listen((newUser) {
+  AuthNotifier(this._auth) {
+    // Inicia a escuta do estado de autenticação do Firebase
+    _listenToAuthStateChanges();
+  }
+
+  void _listenToAuthStateChanges() {
+    _authStateSubscription = _auth.authStateChanges().listen((newUser) {
+      if (_isListenerPaused) return;
+
       _user = newUser;
       notifyListeners();
     });
   }
 
-  /// Força a recarga do usuário atual e notifica os ouvintes.
-  /// Isso é útil após a verificação de e-mail, pois authStateChanges não dispara.
-  Future<void> checkEmailVerification() async {
-    final currentUser = _firebaseAuth.currentUser;
-    if (currentUser != null) {
-      await currentUser.reload();
-      _user = _firebaseAuth.currentUser; // Pega a instância atualizada
+  /// Pausa o listener de autenticação. Usado durante o processo de registro.
+  void pauseListener() {
+    _isListenerPaused = true;
+  }
+
+  /// Retoma o listener e atualiza o estado do usuário imediatamente.
+  void resumeListener({bool notify = true}) {
+    _isListenerPaused = false;
+    _user = _auth.currentUser;
+    if (notify) {
       notifyListeners();
     }
   }
 
+  Future<void> checkEmailVerification() async {
+    await _auth.currentUser?.reload();
+    _user = _auth.currentUser;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
-    _authSubscription.cancel();
+    _authStateSubscription?.cancel();
     super.dispose();
   }
 }

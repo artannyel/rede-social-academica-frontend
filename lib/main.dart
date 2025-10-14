@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; 
+import 'package:provider/provider.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'package:social_academic/features/authentication/data/datasources/auth_remote_datasource.dart';
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
@@ -13,8 +13,14 @@ import 'package:social_academic/features/authentication/data/repositories/auth_r
 import 'package:social_academic/features/authentication/domain/repositories/auth_repository.dart';
 import 'package:social_academic/features/authentication/domain/usecases/login.dart';
 import 'package:social_academic/features/authentication/domain/usecases/register.dart';
+import 'package:social_academic/features/authentication/domain/usecases/send_password_reset_email.dart';
 import 'package:social_academic/features/authentication/presentation/provider/login_change_notifier.dart';
 import 'package:social_academic/features/authentication/presentation/provider/register_change_notifier.dart';
+import 'package:social_academic/features/courses/data/datasources/course_remote_datasource.dart';
+import 'package:social_academic/features/courses/data/repositories/course_repository_impl.dart';
+import 'package:social_academic/features/courses/domain/repositories/course_repository.dart';
+import 'package:social_academic/features/courses/domain/usecases/get_courses.dart';
+import 'package:social_academic/features/courses/presentation/provider/course_change_notifier.dart';
 import 'package:social_academic/firebase_options.dart';
 
 late final FirebaseApp app;
@@ -32,7 +38,13 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   auth = FirebaseAuth.instanceFor(app: app);
-  dio = Dio(BaseOptions(baseUrl: 'http://192.168.3.28:8888/api/v1'));
+  dio = Dio(
+    BaseOptions(
+      baseUrl: 'http://192.168.0.10:8888/api/v1',
+      headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
+      contentType: 'application/json',
+    ),
+  );
 
   runApp(const MyApp());
 }
@@ -67,6 +79,15 @@ class MyApp extends StatelessWidget {
             remoteDataSource: context.read<AuthRemoteDataSource>(),
           ),
         ),
+        Provider<CourseRemoteDataSource>(
+          create: (context) =>
+              CourseRemoteDataSourceImpl(dio: context.read<Dio>()),
+        ),
+        Provider<CourseRepository>(
+          create: (context) => CourseRepositoryImpl(
+            remoteDataSource: context.read<CourseRemoteDataSource>(),
+          ),
+        ),
 
         // Camada de Domínio (Domain)
         Provider<Register>(
@@ -75,13 +96,29 @@ class MyApp extends StatelessWidget {
         Provider<Login>(
           create: (context) => Login(context.read<AuthRepository>()),
         ),
+        Provider<SendPasswordResetEmail>(
+          create: (context) =>
+              SendPasswordResetEmail(context.read<AuthRepository>()),
+        ),
+        Provider<GetCourses>(
+          create: (context) => GetCourses(context.read<CourseRepository>()),
+        ),
 
         // Camada de Apresentação (Presentation)
         ChangeNotifierProvider<RegisterChangeNotifier>(
-          create: (context) => RegisterChangeNotifier(context.read<Register>()),
+          create: (context) => RegisterChangeNotifier(
+            context.read<Register>(),
+            context.read<AuthNotifier>(),
+          ),
         ),
         ChangeNotifierProvider<LoginChangeNotifier>(
-          create: (context) => LoginChangeNotifier(context.read<Login>()),
+          create: (context) => LoginChangeNotifier(
+            context.read<Login>(),
+            context.read<SendPasswordResetEmail>(),
+          ),
+        ),
+        ChangeNotifierProvider<CourseChangeNotifier>(
+          create: (context) => CourseChangeNotifier(context.read<GetCourses>()),
         ),
       ],
       // Usamos um Consumer para obter um `context` que está abaixo do MultiProvider

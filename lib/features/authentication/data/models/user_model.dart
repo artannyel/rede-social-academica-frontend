@@ -1,3 +1,4 @@
+import 'package:social_academic/features/courses/data/models/course_model.dart';
 import '../../domain/entities/user.dart';
 
 // Estende a entidade User, adicionando a lógica de serialização (fromJson/toJson).
@@ -7,6 +8,7 @@ class UserModel extends User {
     required super.name,
     required super.email,
     required super.firebaseUid,
+    CourseModel? super.course,
   });
 
   // Converte um mapa (JSON) em um UserModel.
@@ -16,6 +18,9 @@ class UserModel extends User {
       name: json['name'],
       email: json['email'],
       firebaseUid: json['firebase_uid'],
+      course: json['course_level'] != null
+          ? CourseModel.fromJson(json['course_level'])
+          : null,
     );
   }
 
@@ -26,6 +31,7 @@ class UserModel extends User {
       'name': name,
       'email': email,
       'firebase_uid': firebaseUid,
+      'course_level': (course as CourseModel?)?.toJson(),
     };
   }
 }

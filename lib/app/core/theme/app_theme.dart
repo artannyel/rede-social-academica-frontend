@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static final _lightInputBorder = OutlineInputBorder(
-    borderRadius: BorderRadius.circular(50.0),
+    borderRadius: BorderRadius.circular(25.0),
     borderSide: const BorderSide(color: Colors.grey),
   );
 
   static final _darkInputBorder = OutlineInputBorder(
-    borderRadius: BorderRadius.circular(50.0),
+    borderRadius: BorderRadius.circular(25.0),
     borderSide: const BorderSide(color: Colors.white70),
   );
 

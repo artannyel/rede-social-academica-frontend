@@ -1,3 +1,4 @@
+import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:social_academic/app/core/error/failure.dart';
@@ -15,40 +16,87 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<User> login({required String email, required String password}) async {
+  Future<Either<Failure, User>> login({
+    required String email,
+    required String password,
+  }) async {
     try {
       // O datasource retorna um UserModel, que é então retornado como uma entidade User.
       // A camada de apresentação nunca verá o UserModel.
-      final userModel = await remoteDataSource.login(email: email, password: password);
-      return userModel;
+      final userModel = await remoteDataSource.login(
+        email: email,
+        password: password,
+      );
+      return Right(userModel);
     } on firebase.FirebaseAuthException catch (e) {
       // Mapeia os erros do Firebase para nossas falhas de domínio.
       // Por segurança, unificamos 'user-not-found' e 'wrong-password' na mesma mensagem.
-      if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
-        throw const InvalidCredentialsFailure();
+      if (e.code == 'user-not-found' ||
+          e.code == 'wrong-password' ||
+          e.code == 'invalid-credential') {
+        return const Left(InvalidCredentialsFailure());
       }
       // Para outros erros inesperados do Firebase.
-      throw ServerFailure('Ocorreu um erro durante o login: ${e.code}');
+      return Left(ServerFailure('Ocorreu um erro durante o login: ${e.code}'));
     } on DioException {
       // Erro de comunicação com sua API.
-      throw const ServerFailure('Não foi possível conectar ao servidor. Verifique sua internet.');
+      return const Left(
+        ServerFailure(
+          'Não foi possível conectar ao servidor. Verifique sua internet.',
+        ),
+      );
     }
   }
 
   @override
-  Future<User> register({required String name, required String email, required String password}) async {
+  Future<Either<Failure, User>> register({
+    required String name,
+    required String email,
+    required String password,
+    List<Map<String, dynamic>>? userCourses,
+  }) async {
     try {
-      final userModel = await remoteDataSource.register(name: name, email: email, password: password);
-      return userModel;
+      final userModel = await remoteDataSource.register(
+        name: name,
+        email: email,
+        password: password,
+        userCourses: userCourses,
+      );
+      return Right(userModel);
     } on firebase.FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        throw const WeakPasswordFailure();
+        return const Left(WeakPasswordFailure());
       } else if (e.code == 'email-already-in-use') {
-        throw const EmailAlreadyInUseFailure();
+        return const Left(EmailAlreadyInUseFailure());
+      } else if (e.code == 'backend-registration-failed') {
+        // Trata a falha de registro no nosso backend.
+        return Left(ServerFailure(e.message ?? 'Falha ao registrar no servidor.'));
       }
-      throw ServerFailure('Ocorreu um erro durante o cadastro: ${e.code}');
+      return Left(
+        ServerFailure('Ocorreu um erro durante o cadastro: ${e.code}'),
+      );
     } on DioException {
-      throw const ServerFailure('Não foi possível conectar ao servidor. Verifique sua internet.');
+      return const Left(
+        ServerFailure(
+          'Não foi possível conectar ao servidor. Verifique sua internet.',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> sendPasswordResetEmail({
+    required String email,
+  }) async {
+    try {
+      await remoteDataSource.sendPasswordResetEmail(email: email);
+      return const Right(null);
+    } on firebase.FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found' || e.code == 'invalid-email') {
+        return const Left(ServerFailure('Nenhuma conta encontrada para este e-mail.'));
+      }
+      return Left(ServerFailure(
+          'Ocorreu um erro ao enviar o e-mail: ${e.message}'));
     }
   }
 }
