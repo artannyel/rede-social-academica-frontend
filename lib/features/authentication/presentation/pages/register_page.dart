@@ -409,8 +409,10 @@ class _RegisterPageState extends State<RegisterPage> {
               title: const Text('Selecione seus cursos'),
               content: SizedBox(
                 // Define uma largura responsiva com um máximo de 500px para o diálogo.
-                width:
-                    (MediaQuery.of(context).size.width * 0.8).clamp(0.0, 600.0),
+                width: (MediaQuery.of(context).size.width * 0.8).clamp(
+                  0.0,
+                  600.0,
+                ),
                 child: ListView.builder(
                   shrinkWrap: true,
                   itemCount: courseNotifier.courses.length,

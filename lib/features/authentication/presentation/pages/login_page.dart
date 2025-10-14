@@ -35,7 +35,8 @@ class _LoginPageState extends State<LoginPage> {
     } else if (notifier.state == LoginState.success) {
       showAppSnackBar(
         context,
-        message: 'Login realizado com sucesso! Bem-vindo de volta, ${notifier.user?.name}!',
+        message:
+            'Login realizado com sucesso! Bem-vindo de volta, ${notifier.user?.name}!',
         type: SnackBarType.success,
       );
       notifier.resetState();
@@ -68,7 +69,10 @@ class _LoginPageState extends State<LoginPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Login', style: Theme.of(context).textTheme.headlineMedium),
+                          Text(
+                            'Login',
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
                           const SizedBox(height: 16),
                           ConstrainedBox(
                             constraints: BoxConstraints(maxWidth: 300),
@@ -108,9 +112,13 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 16),
                           TextButton(
                             onPressed: () {
-                              context.go('/register'); // Navega para a tela de cadastro
+                              context.go(
+                                '/register',
+                              ); // Navega para a tela de cadastro
                             },
-                            child: const Text('Não tem uma conta? Cadastre-se.'),
+                            child: const Text(
+                              'Não tem uma conta? Cadastre-se.',
+                            ),
                           ),
                           TextButton(
                             onPressed: () => _showForgotPasswordDialog(context),
@@ -154,7 +162,8 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                    'Digite seu e-mail para receber o link de redefinição.'),
+                  'Digite seu e-mail para receber o link de redefinição.',
+                ),
                 const SizedBox(height: 16),
                 AppTextFormField(
                   controller: dialogEmailController,
@@ -183,16 +192,23 @@ class _LoginPageState extends State<LoginPage> {
             ElevatedButton(
               onPressed: () async {
                 if (dialogFormKey.currentState?.validate() ?? false) {
-                  final notifier = Provider.of<LoginChangeNotifier>(context, listen: false);
-                  final resultMessage = await notifier.sendPasswordResetEmail(dialogEmailController.text);
-                  
+                  final notifier = Provider.of<LoginChangeNotifier>(
+                    context,
+                    listen: false,
+                  );
+                  final resultMessage = await notifier.sendPasswordResetEmail(
+                    dialogEmailController.text,
+                  );
+
                   Navigator.of(dialogContext).pop(); // Fecha o diálogo
 
                   // Mostra o resultado no SnackBar
                   showAppSnackBar(
                     context,
                     message: resultMessage,
-                    type: resultMessage.contains('sucesso') ? SnackBarType.success : SnackBarType.error,
+                    type: resultMessage.contains('sucesso')
+                        ? SnackBarType.success
+                        : SnackBarType.error,
                   );
                 }
               },
