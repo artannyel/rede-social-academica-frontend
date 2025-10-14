@@ -41,6 +41,7 @@ dependencies:
   go_router: ^16.2.4
   url_strategy: ^0.2.0
   dartz: ^0.10.1
+  flutter_dotenv: ^5.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -65,6 +66,7 @@ flutter:
 
   # Para adicionar assets à sua aplicação, adicione uma seção de assets, como esta:
   assets:
+    - .env
     - assets/images/ # Adiciona todos os arquivos dentro da pasta images
 
   # An image asset can refer to one or more resolution-specific "variants", see

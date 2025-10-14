@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'package:social_academic/features/authentication/data/datasources/auth_remote_datasource.dart';
@@ -29,6 +30,8 @@ late final Dio dio;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Carrega as variáveis de ambiente do arquivo .env
+  await dotenv.load(fileName: ".env");
 
   // Remove o # (hash) da URL na web
   setPathUrlStrategy();
@@ -40,7 +43,7 @@ void main() async {
   auth = FirebaseAuth.instanceFor(app: app);
   dio = Dio(
     BaseOptions(
-      baseUrl: 'http://192.168.0.10:8888/api/v1',
+      baseUrl: dotenv.env['BASE_URL']!,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       contentType: 'application/json',
     ),
