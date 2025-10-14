@@ -183,14 +183,20 @@ class _RegisterPageState extends State<RegisterPage> {
                                     return 'Adicione pelo menos um curso.';
                                   }
                                   // Verifica se algum curso selecionado está sem semestre
-                                  if (value.values.any((selection) => selection.semester == null)) {
+                                  if (value.values.any(
+                                    (selection) => selection.semester == null,
+                                  )) {
                                     return 'Selecione o semestre para todos os cursos.';
                                   }
                                   return null;
                                 },
                                 builder: (field) {
-                                  final selectedCourseObjects = courseNotifier.courses
-                                      .where((c) => _selectedCourses.containsKey(c.id))
+                                  final selectedCourseObjects = courseNotifier
+                                      .courses
+                                      .where(
+                                        (c) =>
+                                            _selectedCourses.containsKey(c.id),
+                                      )
                                       .toList();
 
                                   return InputDecorator(
@@ -203,61 +209,109 @@ class _RegisterPageState extends State<RegisterPage> {
                                       children: [
                                         ...selectedCourseObjects.map((course) {
                                           return Padding(
-                                            padding: const EdgeInsets.only(bottom: 8.0),
+                                            padding: const EdgeInsets.only(
+                                              bottom: 8.0,
+                                            ),
                                             child: Row(
                                               children: [
                                                 Expanded(
                                                   flex: 2,
-                                                  child: Text(course.name, overflow: TextOverflow.ellipsis),
+                                                  child: Text(
+                                                    '${course.name}${course.courseLevel != null ? ' - ${course.courseLevel!.name}' : ''}',
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
                                                 ),
                                                 const SizedBox(width: 8),
                                                 Expanded(
                                                   flex: 3,
                                                   child: DropdownButtonFormField<int?>(
-                                                    value: _selectedCourses[course.id]?.isFinished == true
+                                                    value:
+                                                        _selectedCourses[course
+                                                                    .id]
+                                                                ?.isFinished ==
+                                                            true
                                                         ? 0 // Valor especial para "Formado"
-                                                        : _selectedCourses[course.id]?.semester,
+                                                        : _selectedCourses[course
+                                                                  .id]
+                                                              ?.semester,
                                                     isExpanded: true,
                                                     decoration: const InputDecoration(
                                                       hintText: 'Semestre',
-                                                      border: UnderlineInputBorder(),
-                                                      contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                                                      border:
+                                                          UnderlineInputBorder(),
+                                                      contentPadding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal: 8,
+                                                          ),
                                                     ),
                                                     items: [
                                                       // Gera a lista de semestres
-                                                      ...List.generate(course.semester, (index) {
-                                                        final semester = index + 1;
-                                                        return DropdownMenuItem<int>(
-                                                          value: semester,
-                                                          child: Text('$semesterº'),
-                                                        );
-                                                      }),
+                                                      ...List.generate(
+                                                        course.semester,
+                                                        (index) {
+                                                          final semester =
+                                                              index + 1;
+                                                          return DropdownMenuItem<
+                                                            int
+                                                          >(
+                                                            value: semester,
+                                                            child: Text(
+                                                              '$semesterº',
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
                                                       // Adiciona a opção "Formado"
-                                                      const DropdownMenuItem<int>(
-                                                        value: 0, // Valor especial para "Formado"
+                                                      const DropdownMenuItem<
+                                                        int
+                                                      >(
+                                                        value:
+                                                            0, // Valor especial para "Formado"
                                                         child: Text('Formado'),
                                                       ),
                                                     ],
                                                     onChanged: (value) {
                                                       setState(() {
-                                                        if (value == 0) { // Se "Formado" for selecionado
-                                                          _selectedCourses[course.id] = _UserCourseSelection(
-                                                              semester: course.semester, isFinished: true);
+                                                        if (value == 0) {
+                                                          // Se "Formado" for selecionado
+                                                          _selectedCourses[course
+                                                                  .id] =
+                                                              _UserCourseSelection(
+                                                                semester: course
+                                                                    .semester,
+                                                                isFinished:
+                                                                    true,
+                                                              );
                                                         } else {
-                                                          _selectedCourses[course.id] =
-                                                              _UserCourseSelection(semester: value, isFinished: false);
+                                                          _selectedCourses[course
+                                                                  .id] =
+                                                              _UserCourseSelection(
+                                                                semester: value,
+                                                                isFinished:
+                                                                    false,
+                                                              );
                                                         }
-                                                        field.didChange(_selectedCourses);
+                                                        field.didChange(
+                                                          _selectedCourses,
+                                                        );
                                                       });
                                                     },
                                                   ),
                                                 ),
                                                 IconButton(
-                                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                                  icon: const Icon(
+                                                    Icons.delete_outline,
+                                                    color: Colors.red,
+                                                  ),
                                                   onPressed: () {
                                                     setState(() {
-                                                      _selectedCourses.remove(course.id);
-                                                      field.didChange(_selectedCourses);
+                                                      _selectedCourses.remove(
+                                                        course.id,
+                                                      );
+                                                      field.didChange(
+                                                        _selectedCourses,
+                                                      );
                                                     });
                                                   },
                                                 ),
@@ -270,7 +324,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                           icon: const Icon(Icons.add),
                                           label: const Text('Adicionar Cursos'),
                                           onPressed: () async {
-                                            await _showCourseSelectionDialog(context, courseNotifier, field);
+                                            await _showCourseSelectionDialog(
+                                              context,
+                                              courseNotifier,
+                                              field,
+                                            );
                                           },
                                         ),
                                       ],
@@ -350,7 +408,9 @@ class _RegisterPageState extends State<RegisterPage> {
             return AlertDialog(
               title: const Text('Selecione seus cursos'),
               content: SizedBox(
-                width: double.maxFinite,
+                // Define uma largura responsiva com um máximo de 500px para o diálogo.
+                width:
+                    (MediaQuery.of(context).size.width * 0.8).clamp(0.0, 600.0),
                 child: ListView.builder(
                   shrinkWrap: true,
                   itemCount: courseNotifier.courses.length,
@@ -358,7 +418,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     final course = courseNotifier.courses[index];
                     final isSelected = tempSelectedIds.contains(course.id);
                     return CheckboxListTile(
-                      title: Text(course.name),
+                      title: Text(
+                        '${course.name}${course.courseLevel != null ? ' - ${course.courseLevel!.name}' : ''}',
+                      ),
                       value: isSelected,
                       onChanged: (bool? value) {
                         setStateDialog(() {
@@ -383,7 +445,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     setState(() {
                       _selectedCourses.clear();
                       for (var id in tempSelectedIds) {
-                        _selectedCourses[id] = _UserCourseSelection(); // Adiciona o curso com semestre nulo
+                        _selectedCourses[id] =
+                            _UserCourseSelection(); // Adiciona o curso com semestre nulo
                       }
                       field.didChange(_selectedCourses);
                     });
