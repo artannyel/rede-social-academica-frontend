@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:dio/dio.dart'; // Exemplo com Dio para API
+import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 
 // Contrato para a fonte de dados remota
@@ -9,9 +10,11 @@ abstract class AuthRemoteDataSource {
     required String name,
     required String email,
     required String password,
+    String? bio,
     List<Map<String, dynamic>>? userCourses,
   });
   Future<void> sendPasswordResetEmail({required String email});
+  Future<UserModel> getCurrentUser();
 }
 
 // Implementação que usa Firebase Auth e uma API REST (com Dio)
@@ -33,15 +36,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
 
     // 2. Pega o token do Firebase
-    final token = await userCredential.user?.getIdToken();
-
-    // 3. Busca os dados do usuário na sua API com o token
-    final response = await dio.get(
-      '/user/me', // Exemplo de endpoint
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
-    );
-
-    return UserModel.fromJson(response.data);
+    await userCredential.user?.getIdToken();
+    
+    // 3. Reutiliza a lógica de buscar o usuário atual
+    return await getCurrentUser();
   }
 
   @override
@@ -49,6 +47,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String name,
     required String email,
     required String password,
+    String? bio,
     List<Map<String, dynamic>>? userCourses,
   }) async {
     // 1. Cria o usuário no Firebase Auth
@@ -66,6 +65,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'name': name,
           'email': email,
           'firebase_uid': firebaseUid,
+          'bio': bio,
           'courses': userCourses, // Envia a lista de cursos e semestres
         },
       );
@@ -95,5 +95,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> sendPasswordResetEmail({required String email}) async {
     await firebaseAuth.sendPasswordResetEmail(email: email);
+  }
+
+  @override
+  Future<UserModel> getCurrentUser() async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para buscar dados.');
+    }
+
+    final response = await dio.get(
+      '/user/me',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    debugPrint(response.data.toString());
+    return UserModel.fromJson(response.data);
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/authentication/domain/entities/user.dart';
 import 'package:social_academic/features/authentication/domain/usecases/login.dart';
 import 'package:social_academic/features/authentication/domain/usecases/send_password_reset_email.dart';
@@ -8,10 +9,12 @@ enum LoginState { idle, loading, success, error }
 class LoginChangeNotifier extends ChangeNotifier {
   final Login _loginUseCase;
   final SendPasswordResetEmail _sendPasswordResetEmailUseCase;
+  final UserNotifier _userNotifier;
 
   LoginChangeNotifier(
     this._loginUseCase,
     this._sendPasswordResetEmailUseCase,
+    this._userNotifier,
   );
 
   LoginState _state = LoginState.idle;
@@ -43,6 +46,7 @@ class LoginChangeNotifier extends ChangeNotifier {
       },
       (user) { // Lado Direito (Sucesso)
         _user = user;
+        _userNotifier.setAppUser(user); // Atualiza o UserNotifier com o usuário completo
         _state = LoginState.success;
       },
     );

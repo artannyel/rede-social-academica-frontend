@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:social_academic/app/core/auth/auth_notifier.dart';
+import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/authentication/domain/entities/user.dart';
 import 'package:social_academic/features/authentication/domain/usecases/register.dart';
 
@@ -7,9 +7,9 @@ enum RegisterState { idle, loading, success, error }
 
 class RegisterChangeNotifier extends ChangeNotifier {
   final Register _registerUseCase;
-  final AuthNotifier _authNotifier;
+  final UserNotifier _userNotifier;
 
-  RegisterChangeNotifier(this._registerUseCase, this._authNotifier);
+  RegisterChangeNotifier(this._registerUseCase, this._userNotifier);
 
   RegisterState _state = RegisterState.idle;
   RegisterState get state => _state;
@@ -25,10 +25,8 @@ class RegisterChangeNotifier extends ChangeNotifier {
     required String email,
     required String password,
     List<Map<String, dynamic>>? userCourses,
+    String? bio,
   }) async {
-    // Pausa o listener global para evitar o redirecionamento prematuro.
-    _authNotifier.pauseListener();
-
     _state = RegisterState.loading;
     _errorMessage = null;
     notifyListeners();
@@ -38,23 +36,18 @@ class RegisterChangeNotifier extends ChangeNotifier {
       email: email,
       password: password,
       userCourses: userCourses,
+      bio: bio,
     );
 
     result.fold(
       (failure) {
         _errorMessage = failure.message;
         _state = RegisterState.error;
-        // Em caso de erro, apenas reativamos o listener sem notificar,
-        // para que o app possa reagir a outras ações (como um logout manual),
-        // mas sem causar um redirecionamento.
-        _authNotifier.resumeListener(notify: false);
       },
       (user) {
         _user = user;
         _state = RegisterState.success;
-        // Em caso de sucesso, reativamos o listener e notificamos,
-        // para que o GoRouter possa redirecionar para a tela de verificação.
-        _authNotifier.resumeListener();
+        _userNotifier.setAppUser(user); // Atualiza o UserNotifier com o usuário completo
       },
     );
 

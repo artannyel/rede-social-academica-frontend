@@ -13,6 +13,7 @@ class Register {
     required String email,
     required String password,
     List<Map<String, dynamic>>? userCourses,
+    String? bio,
   }) {
     // A lógica de negócio para associar os cursos seria passada aqui.
     // Por enquanto, apenas repassamos para o repositório.
@@ -21,6 +22,7 @@ class Register {
       email: email,
       password: password,
       userCourses: userCourses,
+      bio: bio,
     );
   }
 }

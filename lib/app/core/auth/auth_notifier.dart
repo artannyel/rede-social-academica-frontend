@@ -1,47 +1,40 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/material.dart';
+import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 
 class AuthNotifier extends ChangeNotifier {
-  final FirebaseAuth _auth;
-  StreamSubscription<User?>? _authStateSubscription;
-
-  User? _user;
-  User? get user => _user;
-  bool _isListenerPaused = false;
-
-  AuthNotifier(this._auth) {
+  final firebase.FirebaseAuth _auth;
+  final UserNotifier _userNotifier;
+  StreamSubscription<firebase.User?>? _authStateSubscription;
+ 
+  firebase.User? _user;
+  firebase.User? get user => _user;
+ 
+  AuthNotifier(this._auth, this._userNotifier) {
     // Inicia a escuta do estado de autenticação do Firebase
     _listenToAuthStateChanges();
   }
 
   void _listenToAuthStateChanges() {
-    _authStateSubscription = _auth.authStateChanges().listen((newUser) {
-      if (_isListenerPaused) return;
-
-      _user = newUser;
+    _authStateSubscription = _auth.authStateChanges().listen((firebaseUser) async {
+      _user = firebaseUser;
+      // Notifica o GoRouter sobre a mudança no estado de autenticação.
       notifyListeners();
+
+      if (_user == null) {
+        // Se o usuário do Firebase for nulo (logout), limpa os dados no UserNotifier.
+        _userNotifier.clearUser();
+      } else {
+        // Se há um usuário no Firebase, comanda o UserNotifier para carregar os dados.
+        await _userNotifier.loadCurrentUser();
+      }
     });
-  }
-
-  /// Pausa o listener de autenticação. Usado durante o processo de registro.
-  void pauseListener() {
-    _isListenerPaused = true;
-  }
-
-  /// Retoma o listener e atualiza o estado do usuário imediatamente.
-  void resumeListener({bool notify = true}) {
-    _isListenerPaused = false;
-    _user = _auth.currentUser;
-    if (notify) {
-      notifyListeners();
-    }
   }
 
   Future<void> checkEmailVerification() async {
     await _auth.currentUser?.reload();
-    _user = _auth.currentUser;
-    notifyListeners();
+    notifyListeners(); // Apenas notifica para o GoRouter reavaliar.
   }
 
   @override

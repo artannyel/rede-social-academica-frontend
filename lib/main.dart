@@ -15,13 +15,24 @@ import 'package:social_academic/features/authentication/domain/repositories/auth
 import 'package:social_academic/features/authentication/domain/usecases/login.dart';
 import 'package:social_academic/features/authentication/domain/usecases/register.dart';
 import 'package:social_academic/features/authentication/domain/usecases/send_password_reset_email.dart';
+import 'package:social_academic/features/authentication/domain/usecases/get_current_user.dart';
 import 'package:social_academic/features/authentication/presentation/provider/login_change_notifier.dart';
 import 'package:social_academic/features/authentication/presentation/provider/register_change_notifier.dart';
+import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/courses/data/datasources/course_remote_datasource.dart';
 import 'package:social_academic/features/courses/data/repositories/course_repository_impl.dart';
 import 'package:social_academic/features/courses/domain/repositories/course_repository.dart';
 import 'package:social_academic/features/courses/domain/usecases/get_courses.dart';
 import 'package:social_academic/features/courses/presentation/provider/course_change_notifier.dart';
+import 'package:social_academic/features/posts/data/datasources/post_remote_datasource.dart';
+import 'package:social_academic/features/posts/data/repositories/post_repository_impl.dart';
+import 'package:social_academic/features/posts/domain/repositories/post_repository.dart';
+import 'package:social_academic/features/posts/domain/usecases/create_post.dart';
+import 'package:social_academic/features/posts/presentation/providers/tag_change_notifier.dart';
+import 'package:social_academic/features/posts/data/datasources/tag_remote_datasource.dart';
+import 'package:social_academic/features/posts/data/repositories/tag_repository_impl.dart';
+import 'package:social_academic/features/posts/domain/repositories/tag_repository.dart';
+import 'package:social_academic/features/posts/domain/usecases/get_tags.dart';
 import 'package:social_academic/firebase_options.dart';
 
 late final FirebaseApp app;
@@ -48,6 +59,7 @@ void main() async {
       contentType: 'application/json',
     ),
   );
+  await Future.delayed(Duration(seconds: 1));
 
   runApp(const MyApp());
 }
@@ -60,13 +72,6 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         // Dependências Externas
-        // Este notifier irá ouvir as mudanças de autenticação do Firebase
-        ChangeNotifierProvider<AuthNotifier>(
-          create: (context) => AuthNotifier(auth),
-        ),
-        ChangeNotifierProvider<ThemeNotifier>(
-          create: (context) => ThemeNotifier(),
-        ),
         Provider<FirebaseAuth>.value(value: auth),
         Provider<Dio>.value(value: dio),
 
@@ -91,6 +96,28 @@ class MyApp extends StatelessWidget {
             remoteDataSource: context.read<CourseRemoteDataSource>(),
           ),
         ),
+        Provider<PostRemoteDataSource>(
+          create: (context) => PostRemoteDataSourceImpl(
+            dio: context.read<Dio>(),
+            firebaseAuth: context.read<FirebaseAuth>(),
+          ),
+        ),
+        Provider<PostRepository>(
+          create: (context) => PostRepositoryImpl(
+            remoteDataSource: context.read<PostRemoteDataSource>(),
+          ),
+        ),
+        Provider<TagRemoteDataSource>(
+          create: (context) => TagRemoteDataSourceImpl(
+            dio: context.read<Dio>(),
+            firebaseAuth: context.read<FirebaseAuth>(),
+          ),
+        ),
+        Provider<TagRepository>(
+          create: (context) => TagRepositoryImpl(
+            remoteDataSource: context.read<TagRemoteDataSource>(),
+          ),
+        ),
 
         // Camada de Domínio (Domain)
         Provider<Register>(
@@ -106,22 +133,49 @@ class MyApp extends StatelessWidget {
         Provider<GetCourses>(
           create: (context) => GetCourses(context.read<CourseRepository>()),
         ),
+        Provider<CreatePost>(
+          create: (context) => CreatePost(context.read<PostRepository>()),
+        ),
+        Provider<GetTags>(
+          create: (context) => GetTags(context.read<TagRepository>()),
+        ),
+        Provider<GetCurrentUser>(
+          create: (context) => GetCurrentUser(context.read<AuthRepository>()),
+        ),
 
-        // Camada de Apresentação (Presentation)
+        // Camada de Apresentação (Presentation) - Notifiers de Estado Global
+        ChangeNotifierProvider<UserNotifier>(
+          create: (context) => UserNotifier(context.read<GetCurrentUser>()),
+        ),
+        ChangeNotifierProvider<AuthNotifier>(
+          create: (context) => AuthNotifier(
+            auth,
+            context.read<UserNotifier>(), // AuthNotifier agora depende do UserNotifier
+          ),
+        ),
+        ChangeNotifierProvider<ThemeNotifier>(
+          create: (context) => ThemeNotifier(),
+        ),
+
+        // Notifiers de Página/Funcionalidade Específica
         ChangeNotifierProvider<RegisterChangeNotifier>(
           create: (context) => RegisterChangeNotifier(
             context.read<Register>(),
-            context.read<AuthNotifier>(),
+            context.read<UserNotifier>(), // Register agora atualiza o UserNotifier
           ),
         ),
         ChangeNotifierProvider<LoginChangeNotifier>(
           create: (context) => LoginChangeNotifier(
             context.read<Login>(),
             context.read<SendPasswordResetEmail>(),
+            context.read<UserNotifier>(), // Login agora atualiza o UserNotifier
           ),
         ),
         ChangeNotifierProvider<CourseChangeNotifier>(
           create: (context) => CourseChangeNotifier(context.read<GetCourses>()),
+        ),
+        ChangeNotifierProvider<TagChangeNotifier>(
+          create: (context) => TagChangeNotifier(context.read<GetTags>()),
         ),
       ],
       // Usamos um Consumer para obter um `context` que está abaixo do MultiProvider

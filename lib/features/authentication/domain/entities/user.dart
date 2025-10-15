@@ -6,13 +6,15 @@ class User {
   final String name;
   final String email;
   final String firebaseUid;
-  final Course? course;
+  final List<Course>? courses;
+  final String? bio;
 
   const User({
     required this.id,
     required this.name,
     required this.email,
     required this.firebaseUid,
-    this.course,
+    this.courses,
+    this.bio,
   });
 }

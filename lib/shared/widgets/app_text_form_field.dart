@@ -9,6 +9,7 @@ class AppTextFormField extends StatefulWidget {
   final bool isPassword;
   final IconData? prefixIcon;
   final TextInputAction? textInputAction;
+  final int? maxLines;
 
   const AppTextFormField({
     super.key,
@@ -19,6 +20,7 @@ class AppTextFormField extends StatefulWidget {
     this.isPassword = false,
     this.prefixIcon,
     this.textInputAction,
+    this.maxLines = 1,
   });
 
   @override
@@ -52,6 +54,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
       keyboardType: widget.keyboardType,
       obscureText: _obscureText,
       textInputAction: widget.textInputAction,
+      maxLines: widget.isPassword ? 1 : widget.maxLines,
     );
   }
 }

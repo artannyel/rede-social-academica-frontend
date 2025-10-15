@@ -53,6 +53,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
     required String email,
     required String password,
+    String? bio,
     List<Map<String, dynamic>>? userCourses,
   }) async {
     try {
@@ -60,6 +61,7 @@ class AuthRepositoryImpl implements AuthRepository {
         name: name,
         email: email,
         password: password,
+        bio: bio,
         userCourses: userCourses,
       );
       return Right(userModel);
@@ -97,6 +99,22 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return Left(ServerFailure(
           'Ocorreu um erro ao enviar o e-mail: ${e.message}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, User>> getCurrentUser() async {
+    try {
+      final userModel = await remoteDataSource.getCurrentUser();
+      return Right(userModel);
+    } on DioException {
+      return const Left(
+        ServerFailure(
+          'Não foi possível buscar os dados do usuário. Verifique sua conexão.',
+        ),
+      );
+    } catch (e) {
+      return Left(ServerFailure('Ocorreu um erro inesperado ao buscar o usuário: ${e.toString()}'));
     }
   }
 }

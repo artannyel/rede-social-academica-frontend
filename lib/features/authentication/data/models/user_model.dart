@@ -8,19 +8,23 @@ class UserModel extends User {
     required super.name,
     required super.email,
     required super.firebaseUid,
-    CourseModel? super.course,
+    List<CourseModel>? super.courses,
+    super.bio,    
   });
 
   // Converte um mapa (JSON) em um UserModel.
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final coursesData = json['courses'] as List<dynamic>?;
     return UserModel(
       id: json['id'],
       name: json['name'],
       email: json['email'],
       firebaseUid: json['firebase_uid'],
-      course: json['course_level'] != null
-          ? CourseModel.fromJson(json['course_level'])
-          : null,
+      bio: json['bio'],
+      // Mapeia a lista de JSONs de cursos para uma lista de CourseModel
+      courses: coursesData
+          ?.map((courseJson) => CourseModel.fromJson(courseJson))
+          .toList(),
     );
   }
 
@@ -31,7 +35,11 @@ class UserModel extends User {
       'name': name,
       'email': email,
       'firebase_uid': firebaseUid,
-      'course_level': (course as CourseModel?)?.toJson(),
+      'bio': bio,
+      // Mapeia a lista de CourseModel para uma lista de JSONs
+      'courses': (courses as List<CourseModel>?)
+          ?.map((course) => course.toJson())
+          .toList(),
     };
   }
 }

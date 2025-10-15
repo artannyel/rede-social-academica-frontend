@@ -27,6 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _bioController = TextEditingController();
   // Armazena os cursos selecionados e o semestre correspondente. Key: courseId, Value: semester
   final Map<String, _UserCourseSelection> _selectedCourses = {};
 
@@ -49,6 +50,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _bioController.dispose();
     super.dispose();
   }
 
@@ -165,6 +167,15 @@ class _RegisterPageState extends State<RegisterPage> {
                                 }
                                 return null;
                               },
+                            ),
+                            const SizedBox(height: 16),
+                            AppTextFormField(
+                              controller: _bioController,
+                              labelText: 'Bio (Opcional)',
+                              prefixIcon: Icons.info_outline,
+                              keyboardType: TextInputType.multiline,
+                              maxLines: 4,
+                              textInputAction: TextInputAction.newline,
                             ),
                             const SizedBox(height: 16),
                             if (courseNotifier.state == CourseState.loading)
@@ -374,6 +385,7 @@ class _RegisterPageState extends State<RegisterPage> {
         name: _nameController.text,
         email: _emailController.text,
         password: _passwordController.text,
+        bio: _bioController.text,
         // Converte o mapa para o formato esperado pela API
         userCourses: _selectedCourses.entries
             .where((entry) => entry.value.semester != null)

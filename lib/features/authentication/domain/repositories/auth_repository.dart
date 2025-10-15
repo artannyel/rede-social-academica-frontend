@@ -14,6 +14,8 @@ abstract class AuthRepository {
     required String email,
     required String password,
     List<Map<String, dynamic>>? userCourses,
+    String? bio,
   });
   Future<Either<Failure, void>> sendPasswordResetEmail({required String email});
+  Future<Either<Failure, User>> getCurrentUser();
 }
