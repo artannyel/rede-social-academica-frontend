@@ -85,7 +85,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage>
         Provider.of<AuthNotifier>(
           context,
           listen: false,
-        ).checkEmailVerification(); // Apenas notifica para o GoRouter reavaliar
+        ).updateUser(); // Atualiza o usuário e notifica o GoRouter
       }
     }
   }

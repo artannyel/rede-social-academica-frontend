@@ -17,7 +17,6 @@ import 'package:social_academic/features/authentication/domain/usecases/register
 import 'package:social_academic/features/authentication/domain/usecases/send_password_reset_email.dart';
 import 'package:social_academic/features/authentication/domain/usecases/get_current_user.dart';
 import 'package:social_academic/features/authentication/presentation/provider/login_change_notifier.dart';
-import 'package:social_academic/features/authentication/presentation/provider/register_change_notifier.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/courses/data/datasources/course_remote_datasource.dart';
 import 'package:social_academic/features/courses/data/repositories/course_repository_impl.dart';
@@ -158,11 +157,11 @@ class MyApp extends StatelessWidget {
         ),
 
         // Notifiers de Página/Funcionalidade Específica
-        ChangeNotifierProvider<RegisterChangeNotifier>(
-          create: (context) => RegisterChangeNotifier(
-            context.read<Register>(),
-            context.read<UserNotifier>(), // Register agora atualiza o UserNotifier
-          ),
+        ChangeNotifierProvider<CourseChangeNotifier>(
+          create: (context) => CourseChangeNotifier(context.read<GetCourses>()),
+        ),
+        ChangeNotifierProvider<TagChangeNotifier>(
+          create: (context) => TagChangeNotifier(context.read<GetTags>()),
         ),
         ChangeNotifierProvider<LoginChangeNotifier>(
           create: (context) => LoginChangeNotifier(
@@ -170,12 +169,6 @@ class MyApp extends StatelessWidget {
             context.read<SendPasswordResetEmail>(),
             context.read<UserNotifier>(), // Login agora atualiza o UserNotifier
           ),
-        ),
-        ChangeNotifierProvider<CourseChangeNotifier>(
-          create: (context) => CourseChangeNotifier(context.read<GetCourses>()),
-        ),
-        ChangeNotifierProvider<TagChangeNotifier>(
-          create: (context) => TagChangeNotifier(context.read<GetTags>()),
         ),
       ],
       // Usamos um Consumer para obter um `context` que está abaixo do MultiProvider

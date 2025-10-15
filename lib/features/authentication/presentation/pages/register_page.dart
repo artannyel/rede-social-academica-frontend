@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/authentication/presentation/provider/register_change_notifier.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
 import 'package:social_academic/features/courses/presentation/provider/course_change_notifier.dart';
@@ -30,6 +31,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _bioController = TextEditingController();
   // Armazena os cursos selecionados e o semestre correspondente. Key: courseId, Value: semester
   final Map<String, _UserCourseSelection> _selectedCourses = {};
+  late final AuthNotifier _authNotifier;
 
   @override
   void initState() {
@@ -42,6 +44,7 @@ class _RegisterPageState extends State<RegisterPage> {
         listen: false,
       ).fetchCourses(),
     );
+    _authNotifier = Provider.of<AuthNotifier>(context, listen: false);
   }
 
   @override
@@ -51,6 +54,9 @@ class _RegisterPageState extends State<RegisterPage> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _bioController.dispose();
+    // Garante que o listener seja retomado se o usuário sair da tela
+    // sem completar o registro (ex: voltando para a tela de login).
+    _authNotifier.resumeListener();
     super.dispose();
   }
 
@@ -79,12 +85,16 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: MultiProvider(
-        providers: [
-          Consumer<RegisterChangeNotifier>(builder: (_, __, c) => c!),
-          Consumer<CourseChangeNotifier>(builder: (_, __, c) => c!),
-        ],
-        child: Consumer2<RegisterChangeNotifier, CourseChangeNotifier>(
+      body: ChangeNotifierProvider<RegisterChangeNotifier>(
+        create: (context) => RegisterChangeNotifier(
+          context.read(), // Register
+          context.read(), // AuthNotifier
+          context.read(), // UserNotifier
+          context.read(), // CourseChangeNotifier
+        ),
+        // Usamos um Consumer para obter o context que está abaixo do Provider
+        // e assim ter acesso ao RegisterChangeNotifier recém-criado.
+        child: Consumer2<RegisterChangeNotifier, CourseChangeNotifier>( // CourseChangeNotifier ainda é global
           builder: (context, registerNotifier, courseNotifier, child) {
             // Escuta as mudanças de estado para mostrar SnackBars ou navegar
             WidgetsBinding.instance.addPostFrameCallback(
@@ -349,7 +359,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             const SizedBox(height: 24),
                             ElevatedButton(
-                              onPressed: _submitForm,
+                              onPressed: () => _submitForm(context),
                               child: const Text('Cadastrar'),
                             ),
                             const SizedBox(height: 16),
@@ -375,10 +385,10 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  void _submitForm() {
+  void _submitForm(BuildContext submitContext) {
     if (_formKey.currentState?.validate() ?? false) {
       final notifier = Provider.of<RegisterChangeNotifier>(
-        context,
+        submitContext,
         listen: false,
       );
       notifier.register(

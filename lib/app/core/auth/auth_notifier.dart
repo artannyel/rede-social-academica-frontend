@@ -27,14 +27,27 @@ class AuthNotifier extends ChangeNotifier {
         _userNotifier.clearUser();
       } else {
         // Se há um usuário no Firebase, comanda o UserNotifier para carregar os dados.
+        _user!.getIdToken().then((value) => debugPrint(value));
         await _userNotifier.loadCurrentUser();
       }
     });
   }
 
-  Future<void> checkEmailVerification() async {
-    await _auth.currentUser?.reload();
-    notifyListeners(); // Apenas notifica para o GoRouter reavaliar.
+  /// Força a atualização do usuário interno e notifica os listeners.
+  /// Útil após ações como a verificação de e-mail, que não disparam o `authStateChanges`.
+  void updateUser() {
+    _user = _auth.currentUser;
+    notifyListeners();
+  }
+
+  /// Pausa o listener de autenticação. Útil durante o processo de registro.
+  void pauseListener() {
+    _authStateSubscription?.pause();
+  }
+
+  /// Retoma o listener de autenticação.
+  void resumeListener() {
+    _authStateSubscription?.resume();
   }
 
   @override

@@ -37,7 +37,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     // 2. Pega o token do Firebase
     await userCredential.user?.getIdToken();
-    
+
     // 3. Reutiliza a lógica de buscar o usuário atual
     return await getCurrentUser();
   }

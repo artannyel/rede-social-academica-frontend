@@ -36,4 +36,13 @@ class CourseChangeNotifier extends ChangeNotifier {
     );
     notifyListeners();
   }
+
+  /// Limpa a lista de cursos e reseta o estado.
+  /// Útil ao sair de uma tela que carregou os cursos, como a de registro.
+  void clearCourses() {
+    _courses = [];
+    _state = CourseState.idle;
+    _errorMessage = null;
+    notifyListeners();
+  }
 }
