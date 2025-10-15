@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:dartz/dartz.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:social_academic/app/core/error/failure.dart';
 
 abstract class PostRepository {
@@ -7,6 +7,6 @@ abstract class PostRepository {
     required String publication,
     required List<String> tags,
     required List<String> courses,
-    List<File>? images,
+    List<XFile>? images,
   });
 }

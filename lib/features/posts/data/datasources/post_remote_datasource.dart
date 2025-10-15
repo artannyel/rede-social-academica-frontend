@@ -1,13 +1,13 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 
 abstract class PostRemoteDataSource {
   Future<void> createPost({
     required String publication,
     required List<String> tags,
     required List<String> courses,
-    List<File>? images,
+    List<XFile>? images,
   });
 }
 
@@ -22,7 +22,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     required String publication,
     required List<String> tags,
     required List<String> courses,
-    List<File>? images,
+    List<XFile>? images,
   }) async {
     final token = await firebaseAuth.currentUser?.getIdToken();
     if (token == null) throw Exception('Usuário não autenticado');
@@ -42,8 +42,14 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
     if (images != null && images.isNotEmpty) {
       for (var i = 0; i < images.length; i++) {
+        final image = images[i];
+        final bytes = await image.readAsBytes();
         formData.files.add(
-          MapEntry('images[]', await MultipartFile.fromFile(images[i].path)),
+          MapEntry(
+            'images[]',
+            // Usamos fromBytes, que funciona tanto em mobile quanto na web.
+            MultipartFile.fromBytes(bytes, filename: image.name),
+          ),
         );
       }
     }
