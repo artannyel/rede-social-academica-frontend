@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/courses/presentation/provider/course_change_notifier.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/authentication/domain/entities/user.dart';
 import 'package:social_academic/features/authentication/domain/usecases/register.dart';
@@ -35,6 +36,7 @@ class RegisterChangeNotifier extends ChangeNotifier {
     required String password,
     List<Map<String, dynamic>>? userCourses,
     String? bio,
+    XFile? photo,
   }) async {
     _state = RegisterState.loading;
     // Pausa o listener para evitar que o GoRouter redirecione antes da hora.
@@ -48,6 +50,7 @@ class RegisterChangeNotifier extends ChangeNotifier {
       password: password,
       userCourses: userCourses,
       bio: bio,
+      photo: photo,
     );
 
     result.fold(

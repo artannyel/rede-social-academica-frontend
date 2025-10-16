@@ -1,7 +1,8 @@
 import 'package:dartz/dartz.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:social_academic/app/core/error/failure.dart';
-import '../entities/user.dart';
-import '../repositories/auth_repository.dart';
+import 'package:social_academic/features/authentication/domain/entities/user.dart';
+import 'package:social_academic/features/authentication/domain/repositories/auth_repository.dart';
 
 class Register {
   final AuthRepository repository;
@@ -14,15 +15,15 @@ class Register {
     required String password,
     List<Map<String, dynamic>>? userCourses,
     String? bio,
-  }) {
-    // A lógica de negócio para associar os cursos seria passada aqui.
-    // Por enquanto, apenas repassamos para o repositório.
-    return repository.register(
+    XFile? photo,
+  }) async {
+    return await repository.register(
       name: name,
       email: email,
       password: password,
       userCourses: userCourses,
       bio: bio,
+      photo: photo,
     );
   }
 }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:io'; // Required for File
+import 'package:flutter/foundation.dart' show kIsWeb; // Required for kIsWeb
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/authentication/presentation/provider/register_change_notifier.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
+import 'package:image_picker/image_picker.dart'; // Required for ImagePicker
 import 'package:social_academic/features/courses/presentation/provider/course_change_notifier.dart';
 import 'package:social_academic/shared/widgets/app_text_form_field.dart';
 
@@ -29,6 +32,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _bioController = TextEditingController();
+  XFile? _selectedPhoto; // Variável para armazenar a foto de perfil selecionada
   // Armazena os cursos selecionados e o semestre correspondente. Key: courseId, Value: semester
   final Map<String, _UserCourseSelection> _selectedCourses = {};
   late final AuthNotifier _authNotifier;
@@ -131,6 +135,42 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                               ),
                             ),
+                            const SizedBox(height: 16),
+                            // Campo de upload de foto de perfil
+                            GestureDetector(
+                              onTap: _pickProfileImage,
+                              child: CircleAvatar(
+                                radius: 60,
+                                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                backgroundImage: _selectedPhoto != null
+                                    ? (kIsWeb
+                                        ? NetworkImage(_selectedPhoto!.path)
+                                        : FileImage(File(_selectedPhoto!.path)) as ImageProvider)
+                                    : null,
+                                child: _selectedPhoto == null
+                                    ? Icon(
+                                        Icons.camera_alt,
+                                        size: 40,
+                                        color: Theme.of(context).colorScheme.primary,
+                                      )
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton.icon(
+                              onPressed: _pickProfileImage,
+                              icon: const Icon(Icons.edit),
+                              label: Text(
+                                _selectedPhoto == null
+                                    ? 'Adicionar Foto de Perfil'
+                                    : 'Mudar Foto de Perfil',
+                              ),
+                            ),
+                            if (_selectedPhoto != null)
+                              TextButton(
+                                onPressed: _removeProfileImage,
+                                child: const Text('Remover Foto'),
+                              ),
                             const SizedBox(height: 16),
                             AppTextFormField(
                               controller: _nameController,
@@ -385,6 +425,25 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  // Método para selecionar uma única imagem para a foto de perfil
+  Future<void> _pickProfileImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _selectedPhoto = image;
+      });
+    }
+  }
+
+  // Método para remover a foto de perfil selecionada
+  void _removeProfileImage() {
+    setState(() {
+      _selectedPhoto = null;
+    });
+  }
+
   void _submitForm(BuildContext submitContext) {
     if (_formKey.currentState?.validate() ?? false) {
       final notifier = Provider.of<RegisterChangeNotifier>(
@@ -396,6 +455,7 @@ class _RegisterPageState extends State<RegisterPage> {
         email: _emailController.text,
         password: _passwordController.text,
         bio: _bioController.text,
+        photo: _selectedPhoto, // Passa a foto selecionada
         // Converte o mapa para o formato esperado pela API
         userCourses: _selectedCourses.entries
             .where((entry) => entry.value.semester != null)

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/user_model.dart';
 
 // Contrato para a fonte de dados remota
@@ -11,6 +12,7 @@ abstract class AuthRemoteDataSource {
     required String password,
     String? bio,
     List<Map<String, dynamic>>? userCourses,
+    XFile? photo,
   });
   Future<void> sendPasswordResetEmail({required String email});
   Future<UserModel> getCurrentUser();
@@ -48,6 +50,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String password,
     String? bio,
     List<Map<String, dynamic>>? userCourses,
+    XFile? photo,
   }) async {
     // 1. Cria o usuário no Firebase Auth
     final userCredential = await firebaseAuth.createUserWithEmailAndPassword(
@@ -58,17 +61,62 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     try {
       // 2. Envia os dados para sua API para criar o registro no seu banco
-      final response = await dio.post(
-        '/user/register', // Exemplo de endpoint
-        data: {
+      dynamic requestData;
+
+      if (photo != null) {
+        // Constrói o FormData manualmente para garantir o formato correto dos arrays.
+        final formData = FormData();
+        formData.fields.add(MapEntry('name', name));
+        formData.fields.add(MapEntry('email', email));
+        formData.fields.add(MapEntry('firebase_uid', firebaseUid));
+        if (bio != null) {
+          formData.fields.add(MapEntry('bio', bio));
+        }
+        // Constrói o array de cursos no formato que o backend (ex: Laravel) espera.
+        // Ex: courses[0][id]=uuid, courses[0][current_semester]=1
+        if (userCourses != null) {
+          for (var i = 0; i < userCourses.length; i++) {
+            final courseMap = userCourses[i];
+            courseMap.forEach((key, value) {
+              if (key == 'finished') {
+                // Adiciona cada chave/valor do mapa do curso com o índice correto.
+                final el = value == true ? 1 : 0;
+                formData.fields.add(
+                  MapEntry('courses[$i][$key]', el.toString()),
+                );
+              } else {
+                // Adiciona cada chave/valor do mapa do curso com o índice correto.
+                formData.fields.add(
+                  MapEntry('courses[$i][$key]', value.toString()),
+                );
+              }
+            });
+          }
+        }
+
+        // final fileName = photo.path.split('/').last;
+        final bytes = await photo.readAsBytes();
+        formData.files.add(
+          MapEntry(
+            'photo',
+            MultipartFile.fromBytes(bytes, filename: photo.name),
+          ),
+        );
+        requestData = formData;
+      } else {
+        // Se não houver foto, envia como um JSON simples.
+        requestData = {
           'name': name,
           'email': email,
           'firebase_uid': firebaseUid,
-          'bio': bio,
-          'courses': userCourses, // Envia a lista de cursos e semestres
-        },
-      );
-      // Somente se o passo 2 for bem-sucedido, retornamos o usuário.
+          if (bio != null) 'bio': bio,
+          // No JSON, podemos enviar a lista de mapas diretamente.
+          if (userCourses != null) 'courses': userCourses,
+        };
+      }
+
+      final response = await dio.post('/user/register', data: requestData);
+      // Assumindo que o usuário está dentro de uma chave 'data' na resposta.
       return UserModel.fromJson(response.data);
     } on DioException catch (e) {
       // 3. Se o registro na sua API falhar, deletamos o usuário do Firebase

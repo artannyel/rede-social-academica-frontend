@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
+import 'package:image_picker/image_picker.dart';
 import 'package:social_academic/app/core/error/failure.dart';
 
 import '../../domain/entities/user.dart';
@@ -55,6 +56,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
     String? bio,
     List<Map<String, dynamic>>? userCourses,
+    XFile? photo,
   }) async {
     try {
       final userModel = await remoteDataSource.register(
@@ -63,6 +65,7 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
         bio: bio,
         userCourses: userCourses,
+        photo: photo,
       );
       return Right(userModel);
     } on firebase.FirebaseAuthException catch (e) {
