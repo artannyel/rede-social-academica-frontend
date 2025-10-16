@@ -7,6 +7,7 @@ class User {
   final String email;
   final String firebaseUid;
   final List<Course>? courses;
+  final String? photoUrl;
   final String? bio;
 
   const User({
@@ -14,6 +15,7 @@ class User {
     required this.name,
     required this.email,
     required this.firebaseUid,
+    this.photoUrl,
     this.courses,
     this.bio,
   });

@@ -6,6 +6,7 @@ import 'package:social_academic/features/authentication/presentation/pages/email
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/home/presentation/pages/home_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/create_post_page.dart';
+import 'package:social_academic/features/posts/presentation/pages/post_comments_page.dart';
 
 GoRouter appRouter(AuthNotifier authNotifier) {
   return GoRouter(
@@ -22,14 +23,9 @@ GoRouter appRouter(AuthNotifier authNotifier) {
       final bool isAuthRoute = location == '/login' || location == '/register';
       final bool isVerifying = location == '/verify-email';
 
-      debugPrint(
-        'isLoggedIn: $isLoggedIn, isEmailVerified: $isEmailVerified, location: $location',
-      );
-
       // Se o usuário NÃO está logado e está tentando acessar uma rota protegida,
       // redireciona para o login.
       if (!isLoggedIn && !isAuthRoute && !isVerifying) {
-        debugPrint('Redirecionando para /login');
         return '/login';
       }
 
@@ -118,6 +114,14 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         name: 'create-post',
         builder: (context, state) => const CreatePostPage(),
       ),
+      GoRoute(
+          path: '/posts/:id/comments',
+          name: 'post-comments',
+          builder: (context, state) {
+            final postId = state.pathParameters['id']!;
+            return PostCommentsPage(postId: postId);
+          },
+        ),
     ],
   );
 }

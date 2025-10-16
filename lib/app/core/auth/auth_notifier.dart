@@ -27,7 +27,6 @@ class AuthNotifier extends ChangeNotifier {
         _userNotifier.clearUser();
       } else {
         // Se há um usuário no Firebase, comanda o UserNotifier para carregar os dados.
-        _user!.getIdToken().then((value) => debugPrint(value));
         await _userNotifier.loadCurrentUser();
       }
     });

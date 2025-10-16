@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
-import 'package:dio/dio.dart'; // Exemplo com Dio para API
-import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import '../models/user_model.dart';
 
 // Contrato para a fonte de dados remota
@@ -108,7 +107,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       '/user/me',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
-    debugPrint(response.data.toString());
     return UserModel.fromJson(response.data);
   }
 }

@@ -27,6 +27,11 @@ import 'package:social_academic/features/posts/data/datasources/post_remote_data
 import 'package:social_academic/features/posts/data/repositories/post_repository_impl.dart';
 import 'package:social_academic/features/posts/domain/repositories/post_repository.dart';
 import 'package:social_academic/features/posts/domain/usecases/create_post.dart';
+import 'package:social_academic/features/posts/domain/usecases/create_comment.dart';
+import 'package:social_academic/features/posts/domain/usecases/get_comments.dart';
+import 'package:social_academic/features/posts/presentation/providers/post_change_notifier.dart';
+import 'package:social_academic/features/posts/domain/usecases/like_post.dart';
+import 'package:social_academic/features/posts/domain/usecases/get_posts.dart';
 import 'package:social_academic/features/posts/presentation/providers/tag_change_notifier.dart';
 import 'package:social_academic/features/posts/data/datasources/tag_remote_datasource.dart';
 import 'package:social_academic/features/posts/data/repositories/tag_repository_impl.dart';
@@ -135,6 +140,18 @@ class MyApp extends StatelessWidget {
         Provider<CreatePost>(
           create: (context) => CreatePost(context.read<PostRepository>()),
         ),
+        Provider<GetPosts>(
+          create: (context) => GetPosts(context.read<PostRepository>()),
+        ),
+        Provider<LikePost>(
+          create: (context) => LikePost(context.read<PostRepository>()),
+        ),
+        Provider<CreateComment>(
+          create: (context) => CreateComment(context.read<PostRepository>()),
+        ),
+        Provider<GetComments>(
+          create: (context) => GetComments(context.read<PostRepository>()),
+        ),
         Provider<GetTags>(
           create: (context) => GetTags(context.read<TagRepository>()),
         ),
@@ -168,6 +185,12 @@ class MyApp extends StatelessWidget {
             context.read<Login>(),
             context.read<SendPasswordResetEmail>(),
             context.read<UserNotifier>(), // Login agora atualiza o UserNotifier
+          ),
+        ),
+        ChangeNotifierProvider<PostChangeNotifier>(
+          create: (context) => PostChangeNotifier(
+            context.read<GetPosts>(),
+            context.read<LikePost>(),
           ),
         ),
       ],

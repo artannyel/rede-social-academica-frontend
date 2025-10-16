@@ -1,4 +1,5 @@
 import 'package:social_academic/features/courses/data/models/course_model.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../domain/entities/user.dart';
 
 // Estende a entidade User, adicionando a lógica de serialização (fromJson/toJson).
@@ -8,19 +9,26 @@ class UserModel extends User {
     required super.name,
     required super.email,
     required super.firebaseUid,
+    super.photoUrl,
     List<CourseModel>? super.courses,
     super.bio,    
   });
 
   // Converte um mapa (JSON) em um UserModel.
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final String baseUrl = dotenv.env['STORAGE_BASE_URL'] ?? '';
+    final String? relativeUrl = json['photo_url'];
+    final String? fullUrl =
+        relativeUrl != null ? '$baseUrl/$relativeUrl' : null;
+
     final coursesData = json['courses'] as List<dynamic>?;
     return UserModel(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      firebaseUid: json['firebase_uid'],
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? 'Usuário Anônimo',
+      email: json['email'] as String? ?? '',
+      firebaseUid: json['firebase_uid'] ?? '',
       bio: json['bio'],
+      photoUrl: fullUrl,
       // Mapeia a lista de JSONs de cursos para uma lista de CourseModel
       courses: coursesData
           ?.map((courseJson) => CourseModel.fromJson(courseJson))
@@ -36,6 +44,7 @@ class UserModel extends User {
       'email': email,
       'firebase_uid': firebaseUid,
       'bio': bio,
+      'photo_url': photoUrl,
       // Mapeia a lista de CourseModel para uma lista de JSONs
       'courses': (courses as List<CourseModel>?)
           ?.map((course) => course.toJson())

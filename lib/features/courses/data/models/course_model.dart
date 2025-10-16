@@ -7,12 +7,14 @@ class CourseModel extends Course {
   const CourseModel({
     required super.id,
     required super.name,
-    required super.description,
-    required super.institutionId,
-    required super.courseLevelId,
+    super.description,
+    super.institutionId,
+    super.courseLevelId,
     super.logoUrl,
-    required super.semester,
+    super.semester,
     CourseLevelModel? super.courseLevel,
+    super.currentSemester,
+    super.finished,
   });
 
   /// Converte um mapa (JSON) em um CourseModel.
@@ -28,6 +30,13 @@ class CourseModel extends Course {
       courseLevel: json['course_level'] != null
           ? CourseLevelModel.fromJson(json['course_level'])
           : null,
+      currentSemester:
+          json['pivot'] != null && json['pivot']['current_semester'] != null
+          ? json['pivot']['current_semester']
+          : null,
+      finished: json['pivot'] != null && json['pivot']['finished'] != null
+          ? json['pivot']['finished']
+          : null,
     );
   }
 
@@ -42,6 +51,8 @@ class CourseModel extends Course {
       'logo_url': logoUrl,
       'semester': semester,
       'course_level': (courseLevel as CourseLevelModel?)?.toJson(),
+      'current_semester': currentSemester,
+      'finished': finished,
     };
   }
 }

@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:social_academic/app/core/data/models/paginated_response.dart';
+import 'package:social_academic/features/posts/data/models/comment_model.dart';
+import 'package:social_academic/features/posts/data/models/post_model.dart';
 
 abstract class PostRemoteDataSource {
   Future<void> createPost({
@@ -8,6 +11,27 @@ abstract class PostRemoteDataSource {
     required List<String> tags,
     required List<String> courses,
     List<XFile>? images,
+  });
+
+  /// Busca uma lista paginada de posts.
+  Future<PaginatedResponse<PostModel>> getPosts({
+    required int page,
+  });
+
+  /// Curte ou descurte uma publicação.
+  Future<void> likePost({required String postId});
+
+  /// Cria um novo comentário em uma publicação.
+  Future<void> createComment({
+    required String postId,
+    required String comment,
+    String? parentCommentId,
+  });
+
+  /// Busca os comentários de uma publicação.
+  Future<PaginatedResponse<CommentModel>> getComments({
+    required String postId,
+    required int page,
   });
 }
 
@@ -59,5 +83,73 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
       data: formData,
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
+  }
+
+  @override
+  Future<PaginatedResponse<PostModel>> getPosts({required int page}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    final response = await dio.get(
+      '/posts',
+      queryParameters: {'page': page},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    // Usa o factory do PaginatedResponse para desserializar a resposta completa,
+    // passando a função de conversão para o PostModel.
+    return PaginatedResponse.fromJson(response.data, PostModel.fromJson);
+  }
+
+  @override
+  Future<void> likePost({required String postId}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    await dio.post(
+      '/posts/$postId/like',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  @override
+  Future<void> createComment({
+    required String postId,
+    required String comment,
+    String? parentCommentId,
+  }) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    final data = {
+      'comment': comment,
+    };
+
+    if (parentCommentId != null) {
+      data['post_comment_id'] = parentCommentId;
+    }
+
+    await dio.post(
+      '/posts/$postId/comments',
+      data: data,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  @override
+  Future<PaginatedResponse<CommentModel>> getComments(
+      {required String postId, required int page}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    final response = await dio.get(
+      '/posts/$postId/comments',
+      queryParameters: {'page': page},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    // Usa o factory do PaginatedResponse para desserializar a resposta completa,
+    // passando a função de conversão para o CommentModel.
+    return PaginatedResponse.fromJson(response.data, CommentModel.fromJson);
   }
 }

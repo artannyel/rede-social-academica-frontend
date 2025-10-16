@@ -269,7 +269,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                                     items: [
                                                       // Gera a lista de semestres
                                                       ...List.generate(
-                                                        course.semester,
+                                                        course.semester!,
                                                         (index) {
                                                           final semester =
                                                               index + 1;
