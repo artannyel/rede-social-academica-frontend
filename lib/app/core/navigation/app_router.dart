@@ -7,10 +7,11 @@ import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/home/presentation/pages/home_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/create_post_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/post_comments_page.dart';
+import 'package:social_academic/features/splash/presentation/pages/splash_page.dart';
 
 GoRouter appRouter(AuthNotifier authNotifier) {
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/',
     refreshListenable:
         authNotifier, // Faz o router reavaliar a rota quando o estado de auth mudar
     redirect: (BuildContext context, GoRouterState state) {
@@ -20,18 +21,25 @@ GoRouter appRouter(AuthNotifier authNotifier) {
 
       final String location = state.matchedLocation;
 
+      final bool isSplashRoute = location == '/';
       final bool isAuthRoute = location == '/login' || location == '/register';
       final bool isVerifying = location == '/verify-email';
 
       // Se o usuário NÃO está logado e está tentando acessar uma rota protegida,
       // redireciona para o login.
-      if (!isLoggedIn && !isAuthRoute && !isVerifying) {
+      // Se o usuário não está logado e não está em uma rota de autenticação, mande-o para o login.
+      if (!isLoggedIn && !isAuthRoute) {
         return '/login';
       }
 
       // Se o usuário ESTÁ logado e está tentando acessar as rotas de login/cadastro,
       // redireciona para a home.
       if (isLoggedIn) {
+        // Se o usuário está logado e na splash screen, redireciona para o lugar certo.
+        if (isSplashRoute) {
+          return isEmailVerified ? '/home' : '/verify-email';
+        }
+
         // Se o e-mail não foi verificado e ele não está na tela de verificação, redirecione-o.
         if (!isEmailVerified && !isVerifying) {
           return '/verify-email';
@@ -46,11 +54,72 @@ GoRouter appRouter(AuthNotifier authNotifier) {
       return null;
     },
     routes: [
+      // Rota inicial que exibe a splash screen
       GoRoute(
         path: '/',
-        name: 'root',
-        builder: (context, state) => Center(child: CircularProgressIndicator()),
+        name: 'splash',
+        builder: (context, state) => const SplashPage(),
       ),
+
+      // Rotas da área logada (nível superior)
+      GoRoute(
+        path: '/home',
+        name: 'home',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const HomePage(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // Animação de slide de cima para baixo
+            const begin = Offset(0.0, -1.0);
+            const end = Offset.zero;
+            final tween = Tween(begin: begin, end: end)
+                .chain(CurveTween(curve: Curves.easeInOut));
+            return SlideTransition(
+                position: animation.drive(tween), child: child);
+          },
+        ),
+      ),
+      GoRoute(
+        path: '/posts/create',
+        name: 'create-post',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const CreatePostPage(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              // Animação de slide de baixo para cima
+              const begin = Offset(0.0, 1.0);
+              const end = Offset.zero;
+              final tween = Tween(begin: begin, end: end)
+                  .chain(CurveTween(curve: Curves.easeInOut));
+              return SlideTransition(
+                  position: animation.drive(tween), child: child);
+            },
+          );
+        },
+      ),
+      GoRoute(
+        path: '/posts/:id/comments',
+        name: 'post-comments',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: PostCommentsPage(postId: state.pathParameters['id']!),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              // Animação de slide de baixo para cima
+              const begin = Offset(0.0, 1.0);
+              const end = Offset.zero;
+              final tween = Tween(begin: begin, end: end)
+                  .chain(CurveTween(curve: Curves.easeInOut));
+              return SlideTransition(
+                  position: animation.drive(tween), child: child);
+            },
+          );
+        },
+      ),
+      // Rotas de autenticação
       GoRoute(
         path: '/login',
         name: 'login',
@@ -104,24 +173,6 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         name: 'verify-email',
         builder: (context, state) => const EmailVerificationPage(),
       ),
-      GoRoute(
-        path: '/home',
-        name: 'home',
-        builder: (context, state) => const HomePage(),
-      ),
-      GoRoute(
-        path: '/posts/create',
-        name: 'create-post',
-        builder: (context, state) => const CreatePostPage(),
-      ),
-      GoRoute(
-          path: '/posts/:id/comments',
-          name: 'post-comments',
-          builder: (context, state) {
-            final postId = state.pathParameters['id']!;
-            return PostCommentsPage(postId: postId);
-          },
-        ),
     ],
   );
 }

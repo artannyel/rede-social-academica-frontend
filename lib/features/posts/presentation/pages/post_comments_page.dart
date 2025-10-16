@@ -86,6 +86,7 @@ class _PostCommentsPageState extends State<PostCommentsPage> {
           postId: widget.postId,
           getComments: context.read(),
           createComment: context.read(),
+          likeComment: context.read(),
         ),
         child: Consumer<CommentChangeNotifier>(
           builder: (context, notifier, child) {
@@ -141,6 +142,9 @@ class _PostCommentsPageState extends State<PostCommentsPage> {
           return CommentCard(
             comment: comment,
             onReply: _handleReply,
+            // A função onLike agora recebe o ID do comentário que foi clicado,
+            // seja o principal ou uma de suas respostas.
+            onLike: (String commentId) => notifier.toggleLike(commentId),
           );
         },
       ),

@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:social_academic/features/posts/domain/usecases/like_comment.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'package:social_academic/features/authentication/data/datasources/auth_remote_datasource.dart';
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
@@ -64,6 +66,8 @@ void main() async {
     ),
   );
   await Future.delayed(Duration(seconds: 1));
+
+  GoRouter.optionURLReflectsImperativeAPIs = true;
 
   runApp(const MyApp());
 }
@@ -148,6 +152,9 @@ class MyApp extends StatelessWidget {
         ),
         Provider<CreateComment>(
           create: (context) => CreateComment(context.read<PostRepository>()),
+        ),
+        Provider<LikeComment>(
+          create: (context) => LikeComment(context.read<PostRepository>()),
         ),
         Provider<GetComments>(
           create: (context) => GetComments(context.read<PostRepository>()),

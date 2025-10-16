@@ -7,11 +7,13 @@ class CommentCard extends StatefulWidget {
   final Comment comment;
   final bool isReply;
   final void Function(String commentId, String userName) onReply;
+  final void Function(String commentId) onLike;
 
   const CommentCard({
     super.key,
     required this.comment,
     required this.onReply,
+    required this.onLike,
     this.isReply = false,
   });
 
@@ -25,6 +27,7 @@ class _CommentCardState extends State<CommentCard> {
   Comment get comment => widget.comment;
   bool get isReply => widget.isReply;
   void Function(String, String) get onReply => widget.onReply;
+  void Function(String commentId) get onLike => widget.onLike;
 
   @override
   Widget build(BuildContext context) {
@@ -99,9 +102,7 @@ class _CommentCardState extends State<CommentCard> {
           ),
         const Spacer(),
         TextButton.icon(
-          onPressed: () {
-            // TODO: Implementar lógica de curtir comentário
-          },
+          onPressed: () => onLike(comment.id),
           icon: Icon(
             comment.isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
             size: 16,
@@ -124,6 +125,7 @@ class _CommentCardState extends State<CommentCard> {
                   comment: reply,
                   isReply: true,
                   onReply: onReply, // Passa a função, mas o botão não será exibido
+                  onLike: onLike, // Passa a função de curtir para as respostas
                 ))
             .toList(),
       ),

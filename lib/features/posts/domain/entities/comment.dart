@@ -7,8 +7,8 @@ class Comment {
   final DateTime createdAt;
   final User user;
   final List<Comment> replies; // Para comentários aninhados
-  final int likesCount;
-  final bool isLiked;
+  int likesCount;
+  bool isLiked;
 
   Comment({
     required this.id,

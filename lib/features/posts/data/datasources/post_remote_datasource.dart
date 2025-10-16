@@ -21,6 +21,9 @@ abstract class PostRemoteDataSource {
   /// Curte ou descurte uma publicação.
   Future<void> likePost({required String postId});
 
+  /// Curte ou descurte um comentário.
+  Future<void> likeComment({required String commentId});
+
   /// Cria um novo comentário em uma publicação.
   Future<void> createComment({
     required String postId,
@@ -108,6 +111,17 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
     await dio.post(
       '/posts/$postId/like',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  @override
+  Future<void> likeComment({required String commentId}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    await dio.post(
+      '/comments/$commentId/like',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }

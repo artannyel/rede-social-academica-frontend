@@ -21,6 +21,9 @@ abstract class PostRepository {
   /// Curte ou descurte uma publicação.
   Future<Either<Failure, void>> likePost({required String postId});
 
+  /// Curte ou descurte um comentário.
+  Future<Either<Failure, void>> likeComment({required String commentId});
+
   /// Cria um novo comentário em uma publicação.
   Future<Either<Failure, void>> createComment({
     required String postId,

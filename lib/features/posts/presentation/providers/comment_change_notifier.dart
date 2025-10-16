@@ -2,20 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:social_academic/features/posts/domain/entities/comment.dart';
 import 'package:social_academic/features/posts/domain/usecases/create_comment.dart';
 import 'package:social_academic/features/posts/domain/usecases/get_comments.dart';
+import 'package:social_academic/features/posts/domain/usecases/like_comment.dart';
 
 enum CommentState { idle, loading, loadingMore, success, error, submitting }
 
 class CommentChangeNotifier extends ChangeNotifier {
   final GetComments _getComments;
   final CreateComment _createComment;
+  final LikeComment _likeComment;
   final String postId;
 
   CommentChangeNotifier({
     required this.postId,
     required GetComments getComments,
     required CreateComment createComment,
+    required LikeComment likeComment,
   })  : _getComments = getComments,
-        _createComment = createComment {
+        _createComment = createComment,
+        _likeComment = likeComment {
     fetchInitialComments();
   }
 
@@ -109,5 +113,41 @@ class CommentChangeNotifier extends ChangeNotifier {
         return true;
       },
     );
+  }
+
+  // Função auxiliar recursiva para encontrar um comentário por ID em qualquer nível.
+  Comment? _findCommentById(List<Comment> comments, String id) {
+    for (final comment in comments) {
+      if (comment.id == id) {
+        return comment;
+      }
+      final foundInReplies = _findCommentById(comment.replies, id);
+      if (foundInReplies != null) {
+        return foundInReplies;
+      }
+    }
+    return null;
+  }
+
+  Future<void> toggleLike(String commentId) async {
+    final targetComment = _findCommentById(_comments, commentId);
+
+    if (targetComment == null) return;
+
+    // Atualização Otimista
+    targetComment.isLiked = !targetComment.isLiked;
+    targetComment.isLiked ? targetComment.likesCount++ : targetComment.likesCount--;
+    notifyListeners();
+
+    final result = await _likeComment(commentId: commentId);
+
+    // Reverte em caso de erro
+    result.fold((failure) {
+      targetComment.isLiked = !targetComment.isLiked;
+      targetComment.isLiked ? targetComment.likesCount++ : targetComment.likesCount--;
+      _errorMessage = failure.message;
+      _state = CommentState.error; // ou um estado de erro específico para like
+      notifyListeners();
+    }, (_) => null);
   }
 }

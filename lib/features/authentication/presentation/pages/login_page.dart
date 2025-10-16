@@ -40,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
         type: SnackBarType.success,
       );
       notifier.resetState();
-      context.go('/home'); // Navega para a home após o sucesso
+      context.go('/'); // Navega para a home após o sucesso
     }
   }
 

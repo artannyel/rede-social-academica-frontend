@@ -103,6 +103,23 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
+  Future<Either<Failure, void>> likeComment({required String commentId}) async {
+    try {
+      await remoteDataSource.likeComment(commentId: commentId);
+      return const Right(null);
+    } on DioException catch (e) {
+      log('DioException in likeComment: ${e.response?.data}');
+      String errorMessage = 'Não foi possível processar sua curtida.';
+      if (e.response?.data is Map<String, dynamic>) {
+        errorMessage = e.response!.data['message'] ?? errorMessage;
+      }
+      return Left(ServerFailure(errorMessage));
+    } catch (e) {
+      return Left(ServerFailure('Ocorreu um erro inesperado: ${e.toString()}'));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> createComment({
     required String postId,
     required String comment,
