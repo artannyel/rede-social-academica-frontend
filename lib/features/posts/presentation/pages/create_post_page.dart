@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:social_academic/features/posts/domain/usecases/create_post.dart';
+import 'package:social_academic/features/posts/presentation/providers/post_change_notifier.dart';
 import 'package:social_academic/features/posts/presentation/providers/create_post_change_notifier.dart';
 import 'package:social_academic/features/posts/presentation/providers/tag_change_notifier.dart';
 import 'package:social_academic/features/posts/presentation/widgets/image_picker_field.dart';
@@ -57,6 +58,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
         message: 'Publicação criada com sucesso!',
         type: SnackBarType.success,
       );
+      // Adiciona o novo post à lista da home page para atualização instantânea.
+      if (notifier.createdPost != null) {
+        Provider.of<PostChangeNotifier>(context, listen: false)
+            .addNewPost(notifier.createdPost!);
+      }
       notifier.resetState();
       // Volta para a tela anterior (home) após o sucesso.
       context.go('/home');

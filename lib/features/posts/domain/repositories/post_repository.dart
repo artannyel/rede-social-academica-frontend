@@ -6,7 +6,7 @@ import 'package:social_academic/features/posts/domain/entities/comment.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
 
 abstract class PostRepository {
-  Future<Either<Failure, void>> createPost({
+  Future<Either<Failure, Post>> createPost({
     required String publication,
     required List<String> tags,
     required List<String> courses,

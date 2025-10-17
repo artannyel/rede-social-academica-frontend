@@ -122,4 +122,10 @@ class PostChangeNotifier extends ChangeNotifier {
       },
     );
   }
+
+  /// Adiciona um novo post no início da lista.
+  void addNewPost(Post post) {
+    _posts.insert(0, post);
+    notifyListeners();
+  }
 }

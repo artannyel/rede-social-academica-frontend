@@ -15,20 +15,20 @@ class PostRepositoryImpl implements PostRepository {
   PostRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, void>> createPost({
+  Future<Either<Failure, Post>> createPost({
     required String publication,
     required List<String> tags,
     required List<String> courses,
     List<XFile>? images,
   }) async {
     try {
-      await remoteDataSource.createPost(
+      final postModel = await remoteDataSource.createPost(
         publication: publication,
         tags: tags,
         courses: courses,
         images: images,
       );
-      return const Right(null);
+      return Right(postModel.toEntity());
     } on DioException catch (e) {
       String errorMessage =
           'Não foi possível criar a publicação. Verifique sua conexão.';

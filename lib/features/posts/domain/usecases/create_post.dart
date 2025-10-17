@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:social_academic/app/core/error/failure.dart';
+import 'package:social_academic/features/posts/domain/entities/post.dart';
 import 'package:social_academic/features/posts/domain/repositories/post_repository.dart';
 
 class CreatePost {
@@ -8,7 +9,7 @@ class CreatePost {
 
   CreatePost(this.repository);
 
-  Future<Either<Failure, void>> call({
+  Future<Either<Failure, Post>> call({
     required String publication,
     required List<String> tags,
     required List<String> courses,

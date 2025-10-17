@@ -13,6 +13,16 @@ class UserModel extends User {
     super.bio,    
   });
 
+  /// Construtor para criar um usuário anônimo/inválido.
+  /// Útil para evitar que a UI quebre se um usuário associado a um post/comentário for deletado.
+  const UserModel.anonymous()
+      : super(
+          id: '',
+          name: 'Usuário Removido',
+          email: '',
+          firebaseUid: '',
+        );
+
   // Converte um mapa (JSON) em um UserModel.
   factory UserModel.fromJson(Map<String, dynamic> json) {
     final coursesData = json['courses'] as List<dynamic>?;

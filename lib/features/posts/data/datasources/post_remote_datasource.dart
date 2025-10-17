@@ -6,7 +6,7 @@ import 'package:social_academic/features/posts/data/models/comment_model.dart';
 import 'package:social_academic/features/posts/data/models/post_model.dart';
 
 abstract class PostRemoteDataSource {
-  Future<void> createPost({
+  Future<PostModel> createPost({
     required String publication,
     required List<String> tags,
     required List<String> courses,
@@ -50,7 +50,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   PostRemoteDataSourceImpl({required this.dio, required this.firebaseAuth});
 
   @override
-  Future<void> createPost({
+  Future<PostModel> createPost({
     required String publication,
     required List<String> tags,
     required List<String> courses,
@@ -86,11 +86,14 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
       }
     }
 
-    await dio.post(
+    final response = await dio.post(
       '/posts',
       data: formData,
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
+
+    // Converte a resposta JSON em um PostModel.
+    return PostModel.fromJson(response.data);
   }
 
   @override

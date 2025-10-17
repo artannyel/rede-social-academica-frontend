@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:social_academic/features/posts/domain/entities/post.dart';
 import 'package:social_academic/features/posts/domain/usecases/create_post.dart';
 
 enum CreatePostState { idle, loading, success, error }
@@ -15,6 +16,9 @@ class CreatePostChangeNotifier extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  Post? _createdPost;
+  Post? get createdPost => _createdPost;
+
   Future<void> submitPost({
     required String publication,
     required List<String> tags,
@@ -23,6 +27,7 @@ class CreatePostChangeNotifier extends ChangeNotifier {
   }) async {
     _state = CreatePostState.loading;
     _errorMessage = null;
+    _createdPost = null;
     notifyListeners();
 
     final result = await _createPostUseCase(
@@ -37,7 +42,10 @@ class CreatePostChangeNotifier extends ChangeNotifier {
         _errorMessage = failure.message;
         _state = CreatePostState.error;
       },
-      (_) => _state = CreatePostState.success,
+      (post) {
+        _createdPost = post;
+        _state = CreatePostState.success;
+      },
     );
     notifyListeners();
   }
@@ -45,5 +53,6 @@ class CreatePostChangeNotifier extends ChangeNotifier {
   void resetState() {
     _state = CreatePostState.idle;
     _errorMessage = null;
+    _createdPost = null;
   }
 }
