@@ -13,6 +13,7 @@ import 'package:social_academic/app/core/navigation/app_router.dart';
 import 'package:social_academic/app/core/theme/app_theme.dart';
 import 'package:social_academic/app/core/theme/theme_notifier.dart';
 import 'package:social_academic/features/authentication/data/repositories/auth_repository_impl.dart';
+import 'package:social_academic/features/authentication/domain/usecases/get_user_profile.dart';
 import 'package:social_academic/features/authentication/domain/repositories/auth_repository.dart';
 import 'package:social_academic/features/authentication/domain/usecases/login.dart';
 import 'package:social_academic/features/authentication/domain/usecases/register.dart';
@@ -27,6 +28,7 @@ import 'package:social_academic/features/courses/domain/repositories/course_repo
 import 'package:social_academic/features/courses/domain/usecases/get_courses.dart';
 import 'package:social_academic/features/courses/presentation/provider/course_change_notifier.dart';
 import 'package:social_academic/features/posts/data/datasources/post_remote_datasource.dart';
+import 'package:social_academic/features/profile/presentation/providers/my_posts_change_notifier.dart';
 import 'package:social_academic/features/profile/presentation/providers/edit_profile_change_notifier.dart';
 import 'package:social_academic/features/posts/data/repositories/post_repository_impl.dart';
 import 'package:social_academic/features/posts/domain/repositories/post_repository.dart';
@@ -35,6 +37,7 @@ import 'package:social_academic/features/posts/domain/usecases/create_comment.da
 import 'package:social_academic/features/posts/domain/usecases/get_comments.dart';
 import 'package:social_academic/features/posts/presentation/providers/post_change_notifier.dart';
 import 'package:social_academic/features/posts/domain/usecases/like_post.dart';
+import 'package:social_academic/features/posts/domain/usecases/get_my_posts.dart';
 import 'package:social_academic/features/posts/domain/usecases/get_posts.dart';
 import 'package:social_academic/features/posts/presentation/providers/tag_change_notifier.dart';
 import 'package:social_academic/features/posts/data/datasources/tag_remote_datasource.dart';
@@ -170,6 +173,12 @@ class MyApp extends StatelessWidget {
         Provider<UpdateUser>(
           create: (context) => UpdateUser(context.read<AuthRepository>()),
         ),
+        Provider<GetMyPosts>(
+          create: (context) => GetMyPosts(context.read<PostRepository>()),
+        ),
+        Provider<GetUserProfile>(
+          create: (context) => GetUserProfile(context.read<AuthRepository>()),
+        ),
 
         // Camada de Apresentação (Presentation) - Notifiers de Estado Global
         ChangeNotifierProvider<UserNotifier>(
@@ -209,6 +218,12 @@ class MyApp extends StatelessWidget {
           create: (context) => EditProfileChangeNotifier(
             context.read<UpdateUser>(),
             context.read<UserNotifier>(),
+          ),
+        ),
+        ChangeNotifierProvider<MyPostsChangeNotifier>(
+          create: (context) => MyPostsChangeNotifier(
+            context.read<GetMyPosts>(),
+            context.read<LikePost>(),
           ),
         ),
       ],

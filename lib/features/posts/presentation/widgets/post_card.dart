@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
 import 'package:social_academic/shared/helpers/color_helper.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_images_viewer.dart';
@@ -47,10 +49,20 @@ class PostCard extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final currentUserId = context.read<UserNotifier>().appUser?.id;
+    final isCurrentUserPost = post.user.id == currentUserId;
+
+    void navigateToProfile() {
+      if (isCurrentUserPost) {
+        context.push('/profile');
+      } else {
+        context.push('/users/${post.user.id}');
+      }
+    }
 
     return Row(
       children: [
-        UserAvatar(photoUrl: post.user.photoUrl),
+        GestureDetector(onTap: navigateToProfile, child: UserAvatar(photoUrl: post.user.photoUrl)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -58,11 +70,14 @@ class PostCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      post.user.name,
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                  Expanded(                    
+                    child: GestureDetector(
+                      onTap: navigateToProfile,
+                      child: Text(
+                        post.user.name,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),

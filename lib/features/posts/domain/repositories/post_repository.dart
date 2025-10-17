@@ -18,6 +18,11 @@ abstract class PostRepository {
     required int page,
   });
 
+  /// Busca uma lista paginada dos posts do usuário logado.
+  Future<Either<Failure, PaginatedResponse<Post>>> getMyPosts({
+    required int page,
+  });
+
   /// Curte ou descurte uma publicação.
   Future<Either<Failure, void>> likePost({required String postId});
 

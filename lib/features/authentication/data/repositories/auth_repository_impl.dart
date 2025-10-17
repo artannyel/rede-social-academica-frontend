@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:image_picker/image_picker.dart';
 import 'package:social_academic/app/core/error/failure.dart';
-
+import 'package:social_academic/features/authentication/domain/entities/user_profile.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -75,7 +75,9 @@ class AuthRepositoryImpl implements AuthRepository {
         return const Left(EmailAlreadyInUseFailure());
       } else if (e.code == 'backend-registration-failed') {
         // Trata a falha de registro no nosso backend.
-        return Left(ServerFailure(e.message ?? 'Falha ao registrar no servidor.'));
+        return Left(
+          ServerFailure(e.message ?? 'Falha ao registrar no servidor.'),
+        );
       }
       return Left(
         ServerFailure('Ocorreu um erro durante o cadastro: ${e.code}'),
@@ -111,14 +113,15 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure('Erro de autenticação: ${e.code}'));
     } on DioException {
       return const Left(
-        ServerFailure('Não foi possível conectar ao servidor. Verifique sua internet.'),
+        ServerFailure(
+          'Não foi possível conectar ao servidor. Verifique sua internet.',
+        ),
       );
     } on Exception catch (e) {
       // Captura a exceção genérica lançada pelo datasource
       return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
     }
   }
-
 
   @override
   Future<Either<Failure, void>> sendPasswordResetEmail({
@@ -129,10 +132,13 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Right(null);
     } on firebase.FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.code == 'invalid-email') {
-        return const Left(ServerFailure('Nenhuma conta encontrada para este e-mail.'));
+        return const Left(
+          ServerFailure('Nenhuma conta encontrada para este e-mail.'),
+        );
       }
-      return Left(ServerFailure(
-          'Ocorreu um erro ao enviar o e-mail: ${e.message}'));
+      return Left(
+        ServerFailure('Ocorreu um erro ao enviar o e-mail: ${e.message}'),
+      );
     }
   }
 
@@ -148,7 +154,39 @@ class AuthRepositoryImpl implements AuthRepository {
         ),
       );
     } catch (e) {
-      return Left(ServerFailure('Ocorreu um erro inesperado ao buscar o usuário: ${e.toString()}'));
+      return Left(
+        ServerFailure(
+          'Ocorreu um erro inesperado ao buscar o usuário: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserProfile>> getUserProfile({
+    required String userId,
+    required int page,
+  }) async {
+    try {
+      // 1. O DataSource agora retorna o modelo de dados já parseado.
+      final userProfileModel = await remoteDataSource.getUserProfile(
+        userId: userId,
+        page: page,
+      );
+
+      // 2. O repositório apenas converte o Model para a Entity do domínio.
+      return Right(userProfileModel.toEntity());
+    } on firebase.FirebaseAuthException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Erro ao buscar perfil.'));
+    } on DioException {
+      return const Left(ServerFailure('Não foi possível carregar o perfil. Verifique sua conexão.'));
+    }
+    catch (e) {
+      return Left(
+        ServerFailure(
+          'Ocorreu um erro inesperado ao buscar o perfil: ${e.toString()}',
+        ),
+      );
     }
   }
 }

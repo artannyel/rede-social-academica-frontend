@@ -18,6 +18,11 @@ abstract class PostRemoteDataSource {
     required int page,
   });
 
+  /// Busca uma lista paginada dos posts do usuário logado.
+  Future<PaginatedResponse<PostModel>> getMyPosts({
+    required int page,
+  });
+
   /// Curte ou descurte uma publicação.
   Future<void> likePost({required String postId});
 
@@ -165,5 +170,20 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     // Usa o factory do PaginatedResponse para desserializar a resposta completa,
     // passando a função de conversão para o CommentModel.
     return PaginatedResponse.fromJson(response.data, CommentModel.fromJson);
+  }
+
+  @override
+  Future<PaginatedResponse<PostModel>> getMyPosts({required int page}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    final response = await dio.get(
+      '/posts/me',
+      queryParameters: {'page': page},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    // Reutiliza a mesma lógica de desserialização do getPosts
+    return PaginatedResponse.fromJson(response.data, PostModel.fromJson);
   }
 }

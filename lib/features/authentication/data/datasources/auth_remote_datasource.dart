@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:social_academic/features/authentication/data/models/user_profile_model.dart';
 import '../models/user_model.dart';
 
 // Contrato para a fonte de dados remota
@@ -23,6 +24,10 @@ abstract class AuthRemoteDataSource {
     bool removePhoto,
   });
   Future<UserModel> getCurrentUser();
+  Future<UserProfileModel> getUserProfile({
+    required String userId,
+    required int page,
+  });
 }
 
 // Implementação que usa Firebase Auth e uma API REST (com Dio)
@@ -236,5 +241,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return UserModel.fromJson(response.data);
+  }
+
+  @override
+  Future<UserProfileModel> getUserProfile({
+    required String userId,
+    required int page,
+  }) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para buscar dados.');
+    }
+
+    final response = await dio.get(
+      '/users/$userId',
+      queryParameters: {'page': page},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return UserProfileModel.fromJson(response.data);
   }
 }

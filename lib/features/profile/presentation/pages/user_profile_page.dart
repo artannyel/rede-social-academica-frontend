@@ -1,35 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
-import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/courses/domain/entities/course.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_card.dart';
-import 'package:social_academic/features/profile/presentation/providers/my_posts_change_notifier.dart';
+import 'package:social_academic/features/profile/presentation/providers/user_profile_change_notifier.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+class UserProfilePage extends StatelessWidget {
+  final String userId;
+
+  const UserProfilePage({super.key, required this.userId});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) =>
+          UserProfileChangeNotifier(context.read(), context.read(), userId),
+      child: _UserProfileView(userId: userId),
+    );
+  }
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _UserProfileView extends StatefulWidget {
+  final String userId;
+  const _UserProfileView({required this.userId});
+
+  @override
+  State<_UserProfileView> createState() => _UserProfileViewState();
+}
+
+class _UserProfileViewState extends State<_UserProfileView> {
   final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    // Busca os posts do usuário assim que a tela é construída.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MyPostsChangeNotifier>().fetchInitialPosts();
+      context.read<UserProfileChangeNotifier>().fetchInitialProfile();
     });
 
-    // Adiciona o listener para carregar mais posts ao chegar no final da página.
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
-        context.read<MyPostsChangeNotifier>().fetchMorePosts();
+        context.read<UserProfileChangeNotifier>().fetchMorePosts();
       }
     });
   }
@@ -44,36 +56,34 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Meu Perfil'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Editar Perfil',
-            onPressed: () {
-              context.push('/profile/edit');
-            },
-          ),
-        ],
+        title: Consumer<UserProfileChangeNotifier>(
+          builder: (context, notifier, _) {
+            return Text(notifier.user?.name ?? 'Perfil');
+          },
+        ),
       ),
-      body: Consumer<UserNotifier>(
-        builder: (context, userNotifier, child) {
-          final user = userNotifier.appUser;
-
-          if (userNotifier.isLoading && user == null) {
+      body: Consumer<UserProfileChangeNotifier>(
+        builder: (context, notifier, child) {
+          // Mostra o loader se o usuário for nulo E o estado não for de erro.
+          // Isso cobre tanto o estado 'idle' inicial quanto o 'loading'.
+          if (notifier.user == null && notifier.state != UserProfileState.error) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (user == null) {
-            return const Center(
-              child: Text('Não foi possível carregar os dados do usuário.'),
+          // Mostra o erro apenas se o usuário for nulo E o estado for de erro.
+          if (notifier.user == null && notifier.state == UserProfileState.error) {
+            return Center(
+              child: Text(
+                notifier.errorMessage ?? 'Não foi possível carregar o perfil.',
+              ),
             );
           }
 
-          // A CustomScrollView agora é o widget raiz do corpo, ocupando toda a tela.
+          final user = notifier.user!;
+
           return CustomScrollView(
             controller: _scrollController,
             slivers: [
-              // O conteúdo do perfil é centralizado e constrangido dentro do Sliver.
               SliverToBoxAdapter(
                 child: Center(
                   child: ConstrainedBox(
@@ -108,7 +118,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
-              // Adiciona o título "Minhas Publicações" como um sliver separado
               SliverToBoxAdapter(
                 child: Center(
                   child: ConstrainedBox(
@@ -118,7 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Minhas Publicações',
+                          'Publicações',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ),
@@ -126,8 +135,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
-              // A seção de posts também será centralizada e constrangida internamente.
-              _buildMyPostsSectionSliver(context),
+              _buildPostsSectionSliver(context, notifier),
             ],
           );
         },
@@ -139,7 +147,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Meus Cursos', style: Theme.of(context).textTheme.titleLarge),
+        Text('Cursos', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 16),
         ...courses.map((course) {
           final status = course.finished ?? false
@@ -158,64 +166,40 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildMyPostsSectionSliver(BuildContext context) {
-    return Consumer<MyPostsChangeNotifier>(
-      builder: (context, notifier, child) {
-        // Estado de carregamento inicial
-        if (notifier.state == MyPostsListState.loadingInitial) {
-          return const SliverFillRemaining(
+  Widget _buildPostsSectionSliver(
+    BuildContext context,
+    UserProfileChangeNotifier notifier,
+  ) {
+    if (notifier.posts.isEmpty) {
+      return const SliverFillRemaining(
+        child: Center(
+          child: Text('Este usuário ainda não fez nenhuma publicação.'),
+        ),
+      );
+    }
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate((context, index) {
+        if (index == notifier.posts.length) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
             child: Center(child: CircularProgressIndicator()),
           );
         }
-
-        // Estado de erro na busca inicial
-        if (notifier.state == MyPostsListState.error &&
-            notifier.posts.isEmpty) {
-          return SliverFillRemaining(
-            child: Center(
-              child: Text(notifier.errorMessage ?? 'Ocorreu um erro.'),
+        final post = notifier.posts[index];
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: PostCard(
+                post: post,
+                onLike: () => notifier.toggleLike(post.id),
+              ),
             ),
-          );
-        }
-
-        // Lista vazia
-        if (notifier.posts.isEmpty) {
-          return const SliverFillRemaining(
-            child: Center(
-              child: Text('Você ainda não fez nenhuma publicação.'),
-            ),
-          );
-        }
-
-        // Lista de posts
-        return SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              if (index == notifier.posts.length) {
-                return const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              final post = notifier.posts[index];
-              // Centraliza e constrange cada PostCard individualmente.
-              return Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: PostCard(
-                      post: post,
-                      onLike: () => notifier.toggleLike(post.id),
-                    ),
-                  ),
-                ),
-              );
-            },
-            childCount: notifier.posts.length + (notifier.hasMorePages ? 1 : 0),
           ),
         );
-      },
+      }, childCount: notifier.posts.length + (notifier.hasMorePages ? 1 : 0)),
     );
   }
 }

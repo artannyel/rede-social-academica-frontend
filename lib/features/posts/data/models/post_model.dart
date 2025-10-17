@@ -70,4 +70,26 @@ class PostModel extends Post {
       'tags': (tags as List<TagModel>).map((tag) => tag.toJson()).toList(),
     };
   }
+
+  /// Converte este modelo de dados em uma entidade de domínio.
+  /// Como PostModel já é um subtipo de Post, podemos simplesmente retornar `this`.
+  /// No entanto, para manter a consistência com o padrão `toEntity()`,
+  /// e garantir que os objetos aninhados também sejam convertidos,
+  /// é mais seguro reconstruir o objeto.
+  Post toEntity() {
+    return Post(
+      id: id,
+      publication: publication,
+      sketch: sketch,
+      likesCount: likesCount,
+      commentsCount: commentsCount,
+      isLiked: isLiked,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      user: user, // UserModel é um subtipo de User
+      tags: tags, // TagModel é um subtipo de Tag
+      images: images,
+      courses: courses, // CourseModel é um subtipo de Course
+    );
+  }
 }

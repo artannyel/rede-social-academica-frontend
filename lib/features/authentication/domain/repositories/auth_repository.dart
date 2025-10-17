@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:social_academic/app/core/error/failure.dart';
 import 'package:social_academic/features/authentication/domain/entities/user.dart';
+import 'package:social_academic/features/authentication/domain/entities/user_profile.dart';
 
 abstract class AuthRepository {
   Future<Either<Failure, User>> login({
@@ -28,4 +29,8 @@ abstract class AuthRepository {
 
   Future<Either<Failure, void>> sendPasswordResetEmail({required String email});
   Future<Either<Failure, User>> getCurrentUser();
+  Future<Either<Failure, UserProfile>> getUserProfile({
+    required String userId,
+    required int page,
+  });
 }
