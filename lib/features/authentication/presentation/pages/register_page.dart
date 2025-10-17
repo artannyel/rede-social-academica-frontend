@@ -7,6 +7,7 @@ import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/authentication/presentation/provider/register_change_notifier.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
 import 'package:image_picker/image_picker.dart'; // Required for ImagePicker
+import 'package:social_academic/shared/widgets/responsive_layout.dart';
 import 'package:social_academic/features/courses/presentation/provider/course_change_notifier.dart';
 import 'package:social_academic/shared/widgets/app_text_form_field.dart';
 
@@ -111,13 +112,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
             return Center(
               child: SingleChildScrollView(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Form(
-                        key: _formKey,
+                child: ResponsiveLayout(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Form(
+                      key: _formKey,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -127,10 +126,10 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             const SizedBox(height: 16),
                             ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: 300),
+                              constraints: const BoxConstraints(maxWidth: 300),
                               child: Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: Image.asset(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Image.asset( 
                                   'assets/images/image_for_register.png',
                                 ),
                               ),
@@ -415,7 +414,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                     ),
-                  ),
                 ),
               ),
             );

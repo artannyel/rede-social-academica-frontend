@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_academic/features/authentication/presentation/provider/login_change_notifier.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
+import 'package:social_academic/shared/widgets/responsive_layout.dart';
 import 'package:social_academic/shared/widgets/app_text_form_field.dart';
 
 class LoginPage extends StatefulWidget {
@@ -59,73 +60,70 @@ class _LoginPageState extends State<LoginPage> {
 
           return Center(
             child: SingleChildScrollView(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Login',
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                          const SizedBox(height: 16),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: 300),
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Image.asset(
-                                'assets/images/image_for_login.png',
-                              ),
+              child: ResponsiveLayout(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Login',
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Image.asset(
+                              'assets/images/image_for_login.png',
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          AppTextFormField(
-                            controller: _emailController,
-                            labelText: 'E-mail',
-                            prefixIcon: Icons.email_outlined,
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            validator: (value) => (value?.isEmpty ?? true)
-                                ? 'Por favor, insira seu e-mail'
-                                : null,
+                        ),
+                        const SizedBox(height: 16),
+                        AppTextFormField(
+                          controller: _emailController,
+                          labelText: 'E-mail',
+                          prefixIcon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          validator: (value) => (value?.isEmpty ?? true)
+                              ? 'Por favor, insira seu e-mail'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        AppTextFormField(
+                          controller: _passwordController,
+                          labelText: 'Senha',
+                          prefixIcon: Icons.lock_outline,
+                          isPassword: true,
+                          validator: (value) => (value?.isEmpty ?? true)
+                              ? 'Por favor, insira sua senha'
+                              : null,
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: _submitForm,
+                          child: const Text('Entrar'),
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () {
+                            context.go(
+                              '/register',
+                            ); // Navega para a tela de cadastro
+                          },
+                          child: const Text(
+                            'Não tem uma conta? Cadastre-se.',
                           ),
-                          const SizedBox(height: 16),
-                          AppTextFormField(
-                            controller: _passwordController,
-                            labelText: 'Senha',
-                            prefixIcon: Icons.lock_outline,
-                            isPassword: true,
-                            validator: (value) => (value?.isEmpty ?? true)
-                                ? 'Por favor, insira sua senha'
-                                : null,
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton(
-                            onPressed: _submitForm,
-                            child: const Text('Entrar'),
-                          ),
-                          const SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () {
-                              context.go(
-                                '/register',
-                              ); // Navega para a tela de cadastro
-                            },
-                            child: const Text(
-                              'Não tem uma conta? Cadastre-se.',
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => _showForgotPasswordDialog(context),
-                            child: const Text('Esqueci minha senha'),
-                          ),
-                        ],
-                      ),
+                        ),
+                        TextButton(
+                          onPressed: () => _showForgotPasswordDialog(context),
+                          child: const Text('Esqueci minha senha'),
+                        ),
+                      ],
                     ),
                   ),
                 ),

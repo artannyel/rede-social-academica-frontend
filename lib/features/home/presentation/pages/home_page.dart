@@ -6,6 +6,7 @@ import 'package:social_academic/app/core/theme/theme_notifier.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/posts/presentation/providers/post_change_notifier.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_card.dart';
+import 'package:social_academic/shared/widgets/responsive_layout.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
 
 class HomePage extends StatefulWidget {
@@ -125,13 +126,10 @@ class _HomePageState extends State<HomePage> {
                 }
                 // Renderiza o card do post
                 final post = notifier.posts[index];
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
-                    child: PostCard(
-                      post: post,
-                      onLike: () => notifier.toggleLike(post.id),
-                    ),
+                return ResponsiveLayout(
+                  child: PostCard(
+                    post: post,
+                    onLike: () => notifier.toggleLike(post.id),
                   ),
                 );
               },

@@ -8,6 +8,7 @@ import 'package:social_academic/features/authentication/presentation/provider/us
 import 'package:social_academic/features/courses/domain/entities/course.dart';
 import 'package:social_academic/features/courses/presentation/provider/course_change_notifier.dart';
 import 'package:social_academic/features/profile/presentation/providers/edit_profile_change_notifier.dart';
+import 'package:social_academic/shared/widgets/responsive_layout.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
 import 'package:social_academic/shared/widgets/app_text_form_field.dart';
 
@@ -184,9 +185,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       backgroundImage = NetworkImage(_existingPhotoUrl!);
     }
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600),
+    return ResponsiveLayout(
+      child: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Form(

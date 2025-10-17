@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:social_academic/features/posts/presentation/providers/comment_change_notifier.dart';
 import 'package:social_academic/features/posts/presentation/widgets/comment_card.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
+import 'package:social_academic/shared/widgets/responsive_layout.dart';
 
 class PostCommentsPage extends StatelessWidget {
   final String postId;
@@ -146,14 +147,11 @@ class _PostCommentsViewState extends State<_PostCommentsView> {
             );
           }
           final comment = notifier.comments[index];
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: CommentCard(
-                comment: comment,
-                onReply: _handleReply,
-                onLike: (String commentId) => notifier.toggleLike(commentId),
-              ),
+          return ResponsiveLayout(
+            child: CommentCard(
+              comment: comment,
+              onReply: _handleReply,
+              onLike: (String commentId) => notifier.toggleLike(commentId),
             ),
           );
         },
@@ -162,70 +160,68 @@ class _PostCommentsViewState extends State<_PostCommentsView> {
   }
 
   Widget _buildCommentInputField(CommentChangeNotifier notifier) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600),
-        child: Container(
-          padding: const EdgeInsets.all(8.0),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, -2),
+    return ResponsiveLayout(
+      child: Container(
+        padding: const EdgeInsets.all(8.0),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_replyingToCommentId != null)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                child: Row(
+                  children: [
+                    Text(
+                      'Respondendo a $_replyingToUserName',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 16),
+                      onPressed: () {
+                        setState(() {
+                          _replyingToCommentId = null;
+                          _replyingToUserName = null;
+                        });
+                      },
+                    )
+                  ],
+                ),
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_replyingToCommentId != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Respondendo a $_replyingToUserName',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 16),
-                        onPressed: () {
-                          setState(() {
-                            _replyingToCommentId = null;
-                            _replyingToUserName = null;
-                          });
-                        },
-                      )
-                    ],
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _commentController,
+                    focusNode: _commentFocusNode,
+                    decoration: const InputDecoration(
+                      hintText: 'Adicione um comentário...',
+                      border: InputBorder.none,
+                    ),
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _submitComment(notifier),
                   ),
                 ),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _commentController,
-                      focusNode: _commentFocusNode,
-                      decoration: const InputDecoration(
-                        hintText: 'Adicione um comentário...',
-                        border: InputBorder.none,
-                      ),
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _submitComment(notifier),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: notifier.state == CommentState.submitting
-                        ? null
-                        : () => _submitComment(notifier),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: notifier.state == CommentState.submitting
+                      ? null
+                      : () => _submitComment(notifier),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

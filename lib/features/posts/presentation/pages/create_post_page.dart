@@ -9,6 +9,7 @@ import 'package:social_academic/features/posts/presentation/providers/create_pos
 import 'package:social_academic/features/posts/presentation/providers/tag_change_notifier.dart';
 import 'package:social_academic/features/posts/presentation/widgets/image_picker_field.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
+import 'package:social_academic/shared/widgets/responsive_layout.dart';
 import 'package:social_academic/shared/widgets/app_text_form_field.dart';
 import 'package:social_academic/shared/widgets/multi_select_chip_field.dart';
 
@@ -147,9 +148,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
   }
 
   Widget _buildForm(BuildContext context, List<dynamic> userCourses) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600),
+    return ResponsiveLayout(
+      child: Center(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),

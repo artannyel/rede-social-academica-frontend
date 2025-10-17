@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:social_academic/features/courses/domain/entities/course.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_card.dart';
 import 'package:social_academic/features/profile/presentation/providers/user_profile_change_notifier.dart';
+import 'package:social_academic/shared/widgets/responsive_layout.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
 
 class UserProfilePage extends StatelessWidget {
@@ -85,51 +86,45 @@ class _UserProfileViewState extends State<_UserProfileView> {
             controller: _scrollController,
             slivers: [
               SliverToBoxAdapter(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          UserAvatar(photoUrl: user.photoUrl, radius: 60),
-                          const SizedBox(height: 16),
+                child: ResponsiveLayout(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        UserAvatar(photoUrl: user.photoUrl, radius: 60),
+                        const SizedBox(height: 16),
+                        Text(
+                          user.name,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        if (user.bio != null && user.bio!.isNotEmpty)
                           Text(
-                            user.name,
-                            style: Theme.of(context).textTheme.headlineSmall,
+                            user.bio!,
+                            style: Theme.of(context).textTheme.bodyLarge,
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 8),
-                          if (user.bio != null && user.bio!.isNotEmpty)
-                            Text(
-                              user.bio!,
-                              style: Theme.of(context).textTheme.bodyLarge,
-                              textAlign: TextAlign.center,
-                            ),
-                          const SizedBox(height: 24),
-                          const Divider(),
-                          const SizedBox(height: 16),
-                          if (user.courses != null && user.courses!.isNotEmpty)
-                            _buildCoursesSection(context, user.courses!),
-                        ],
-                      ),
+                        const SizedBox(height: 24),
+                        const Divider(),
+                        const SizedBox(height: 16),
+                        if (user.courses != null && user.courses!.isNotEmpty)
+                          _buildCoursesSection(context, user.courses!),
+                      ],
                     ),
                   ),
                 ),
               ),
               SliverToBoxAdapter(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Publicações',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
+                child: ResponsiveLayout(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Publicações',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
                   ),
@@ -187,15 +182,12 @@ class _UserProfileViewState extends State<_UserProfileView> {
           );
         }
         final post = notifier.posts[index];
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: PostCard(
-                post: post,
-                onLike: () => notifier.toggleLike(post.id),
-              ),
+        return ResponsiveLayout(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: PostCard(
+              post: post,
+              onLike: () => notifier.toggleLike(post.id),
             ),
           ),
         );

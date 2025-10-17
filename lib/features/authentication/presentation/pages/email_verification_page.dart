@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
+import 'package:social_academic/shared/widgets/responsive_layout.dart';
 
 class EmailVerificationPage extends StatefulWidget {
   const EmailVerificationPage({super.key});
@@ -140,58 +141,54 @@ class _EmailVerificationPageState extends State<EmailVerificationPage>
     final userEmail = FirebaseAuth.instance.currentUser?.email ?? 'seu e-mail';
 
     return Scaffold(
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Verificação de E-mail',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Um e-mail de verificação foi enviado para:',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  userEmail,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Por favor, verifique sua caixa de entrada e clique no link para continuar.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.email),
-                  label: const Text('Reenviar E-mail'),
-                  onPressed: _isSendingVerification
-                      ? null
-                      : _resendVerificationEmail,
-                ),
-                if (_isSendingVerification) ...[
-                  const SizedBox(height: 16),
-                  const CircularProgressIndicator(),
-                ],
-                const SizedBox(height: 24),
-                TextButton(
-                  onPressed: () {
-                    // Faz logout e o redirect do GoRouter cuidará do resto
-                    Provider.of<FirebaseAuth>(context, listen: false).signOut();
-                  },
-                  child: const Text('Fazer logout'),
-                ),
+      body: ResponsiveLayout(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Verificação de E-mail',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Um e-mail de verificação foi enviado para:',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                userEmail,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Por favor, verifique sua caixa de entrada e clique no link para continuar.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.email),
+                label: const Text('Reenviar E-mail'),
+                onPressed:
+                    _isSendingVerification ? null : _resendVerificationEmail,
+              ),
+              if (_isSendingVerification) ...[
+                const SizedBox(height: 16),
+                const CircularProgressIndicator(),
               ],
-            ),
+              const SizedBox(height: 24),
+              TextButton(
+                onPressed: () {
+                  // Faz logout e o redirect do GoRouter cuidará do resto
+                  Provider.of<FirebaseAuth>(context, listen: false).signOut();
+                },
+                child: const Text('Fazer logout'),
+              ),
+            ],
           ),
         ),
       ),
