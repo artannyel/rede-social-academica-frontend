@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
+import 'package:social_academic/shared/helpers/time_ago_helper.dart';
 import 'package:social_academic/shared/helpers/color_helper.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_images_viewer.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
@@ -66,6 +66,9 @@ class PostCard extends StatelessWidget {
     final currentUserId = context.read<UserNotifier>().appUser?.id;
     final isCurrentUserPost = post.user.id == currentUserId;
 
+    // Considera editado se a diferença for maior que 5 segundos.
+    final bool isEdited = post.updatedAt.difference(post.createdAt).inSeconds > 5;
+
     void navigateToProfile() {
       if (isCurrentUserPost) {
         context.push('/profile');
@@ -98,13 +101,17 @@ class PostCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(
-                    DateFormat(
-                      'dd/MM/yyyy \'às\' HH:mm',
-                    ).format(post.createdAt),
-                    style: textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        formatTimeAgo(post.createdAt),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (isEdited)
+                        Text(' (editado)', style: textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic)),
+                    ],
                   ),
                 ],
               ),
