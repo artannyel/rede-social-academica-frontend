@@ -11,14 +11,13 @@ class PostCommentsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      // 1. O Provider agora é criado aqui, no widget pai.
       create: (context) => CommentChangeNotifier(
         postId: postId,
         getComments: context.read(),
         createComment: context.read(),
         likeComment: context.read(),
       ),
-      child: const _PostCommentsView(), // 2. O conteúdo da página agora está em um widget filho.
+      child: const _PostCommentsView(),
     );
   }
 }
@@ -101,20 +100,15 @@ class _PostCommentsViewState extends State<_PostCommentsView> {
       resizeToAvoidBottomInset: false,
       body: Consumer<CommentChangeNotifier>(
         builder: (context, notifier, child) {
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Padding(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: _buildCommentsList(notifier),
-                    ),
-                    _buildCommentInputField(notifier),
-                  ],
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom),
+            child: Column(
+              children: [
+                Expanded(
+                  child: _buildCommentsList(notifier),
                 ),
-              ),
+                _buildCommentInputField(notifier),
+              ],
             ),
           );
         },
@@ -152,12 +146,15 @@ class _PostCommentsViewState extends State<_PostCommentsView> {
             );
           }
           final comment = notifier.comments[index];
-          return CommentCard(
-            comment: comment,
-            onReply: _handleReply,
-            // A função onLike agora recebe o ID do comentário que foi clicado,
-            // seja o principal ou uma de suas respostas.
-            onLike: (String commentId) => notifier.toggleLike(commentId),
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: CommentCard(
+                comment: comment,
+                onReply: _handleReply,
+                onLike: (String commentId) => notifier.toggleLike(commentId),
+              ),
+            ),
           );
         },
       ),
@@ -165,66 +162,71 @@ class _PostCommentsViewState extends State<_PostCommentsView> {
   }
 
   Widget _buildCommentInputField(CommentChangeNotifier notifier) {
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_replyingToCommentId != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-              child: Row(
-                children: [
-                  Text(
-                    'Respondendo a $_replyingToUserName',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 16),
-                    onPressed: () {
-                      setState(() {
-                        _replyingToCommentId = null;
-                        _replyingToUserName = null;
-                      });
-                    },
-                  )
-                ],
-              ),
-            ),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _commentController,
-                  focusNode: _commentFocusNode,
-                  decoration: const InputDecoration(
-                    hintText: 'Adicione um comentário...',
-                    border: InputBorder.none,
-                  ),
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => _submitComment(notifier),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.send),
-                onPressed: notifier.state == CommentState.submitting
-                    ? null
-                    : () => _submitComment(notifier),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: Container(
+          padding: const EdgeInsets.all(8.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, -2),
               ),
             ],
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_replyingToCommentId != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Respondendo a $_replyingToUserName',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 16),
+                        onPressed: () {
+                          setState(() {
+                            _replyingToCommentId = null;
+                            _replyingToUserName = null;
+                          });
+                        },
+                      )
+                    ],
+                  ),
+                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      focusNode: _commentFocusNode,
+                      decoration: const InputDecoration(
+                        hintText: 'Adicione um comentário...',
+                        border: InputBorder.none,
+                      ),
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _submitComment(notifier),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: notifier.state == CommentState.submitting
+                        ? null
+                        : () => _submitComment(notifier),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
