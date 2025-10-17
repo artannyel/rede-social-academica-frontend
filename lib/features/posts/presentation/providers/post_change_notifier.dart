@@ -76,7 +76,12 @@ class PostChangeNotifier extends ChangeNotifier {
         _currentPage--; // Volta a página em caso de erro
       },
       (paginatedResponse) {
-        _posts.addAll(paginatedResponse.data);
+        // Filtra posts duplicados antes de adicionar à lista.
+        // Isso evita que posts que já foram carregados (e que podem ter "descido"
+        // para páginas posteriores devido a novos posts no topo) sejam adicionados novamente.
+        final newPosts = paginatedResponse.data.where((newPost) =>
+            !_posts.any((existingPost) => existingPost.id == newPost.id)).toList();
+        _posts.addAll(newPosts);
         _hasMorePages = paginatedResponse.hasMorePages;
         _state = PostListState.success;
       },

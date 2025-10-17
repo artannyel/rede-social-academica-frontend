@@ -18,7 +18,7 @@ class CommentModel extends Comment {
     return CommentModel(
       id: json['id'],
       comment: json['comment'],
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: DateTime.parse(json['created_at']).toLocal(), // Convertido para horário local
       // Adiciona uma verificação para garantir que 'user' não seja nulo.
       // Se for nulo, cria um UserModel "anônimo" para evitar que o app quebre.
       user: json['user'] != null ? UserModel.fromJson(json['user']) : const UserModel.anonymous(),

@@ -29,8 +29,8 @@ class PostModel extends Post {
       id: json['id'],
       publication: json['publication'],
       sketch: json['sketch'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: DateTime.parse(json['created_at']).toLocal(), // Convertido para horário local
+      updatedAt: DateTime.parse(json['updated_at']).toLocal(), // Convertido para horário local
       likesCount: json['likes_count'],
       commentsCount: json['comments_count'],
       images:
