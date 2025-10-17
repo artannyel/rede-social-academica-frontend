@@ -11,8 +11,22 @@ import 'package:social_academic/shared/widgets/user_avatar.dart';
 class PostCard extends StatelessWidget {
   final Post post;
   final VoidCallback onLike;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final VoidCallback? onRestore;
+  final VoidCallback? onForceDelete;
+  final bool isArchived;
 
-  const PostCard({super.key, required this.post, required this.onLike});
+  const PostCard({
+    super.key,
+    required this.post,
+    required this.onLike,
+    this.onEdit,
+    this.onDelete,
+    this.onRestore,
+    this.onForceDelete,
+    this.isArchived = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +49,9 @@ class PostCard extends StatelessWidget {
               post.publication,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
-            if (post.images.isNotEmpty) ...[
+            if (post.images.isNotEmpty && !isArchived) ...[
               const SizedBox(height: 12),
-              PostImagesViewer(imageUrls: post.images),
+              PostImagesViewer(images: post.images),
             ],
             const SizedBox(height: 8),
             _buildFooter(context, hasTopDivider: post.images.isEmpty),
@@ -62,7 +76,10 @@ class PostCard extends StatelessWidget {
 
     return Row(
       children: [
-        GestureDetector(onTap: navigateToProfile, child: UserAvatar(photoUrl: post.user.photoUrl)),
+        GestureDetector(
+          onTap: navigateToProfile,
+          child: UserAvatar(photoUrl: post.user.photoUrl),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -70,7 +87,7 @@ class PostCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Expanded(                    
+                  Expanded(
                     child: GestureDetector(
                       onTap: navigateToProfile,
                       child: Text(
@@ -109,12 +126,65 @@ class PostCard extends StatelessWidget {
             ],
           ),
         ),
-        // IconButton(
-        //   icon: const Icon(Icons.more_vert),
-        //   onPressed: () {
-        //     // TODO: Implementar menu de opções do post
-        //   },
-        // ),
+        if (!isArchived && (onEdit != null || onDelete != null))
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'edit') {
+                onEdit!();
+              } else if (value == 'delete') {
+                onDelete!();
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'edit',
+                child: ListTile(
+                  leading: Icon(Icons.edit_outlined),
+                  title: Text('Editar'),
+                ),
+              ),
+              if (onDelete != null)
+                const PopupMenuItem<String>(
+                  value: 'delete',
+                  child: ListTile(
+                    leading: Icon(Icons.archive_outlined, color: Colors.red),
+                    title:
+                        Text('Arquivar', style: TextStyle(color: Colors.red)),
+                  ),
+                ),
+            ],
+          ),
+        if (isArchived)
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'restore') {
+                onRestore?.call();
+              } else if (value == 'force_delete') {
+                onForceDelete?.call();
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              if (onRestore != null)
+                const PopupMenuItem<String>(
+                  value: 'restore',
+                  child: ListTile(
+                    leading: Icon(Icons.unarchive_outlined),
+                    title: Text('Restaurar'),
+                  ),
+                ),
+              if (onForceDelete != null)
+                const PopupMenuItem<String>(
+                  value: 'force_delete',
+                  child: ListTile(
+                    leading: Icon(Icons.delete_forever_outlined, color: Colors.red),
+                    title: Text('Excluir Permanentemente',
+                        style: TextStyle(color: Colors.red)),
+                  ),
+                ),
+            ],
+          ),
       ],
     );
   }
@@ -154,7 +224,7 @@ class PostCard extends StatelessWidget {
   Widget _buildFooter(BuildContext context, {bool hasTopDivider = true}) {
     return Column(
       children: [
-        if (hasTopDivider) const Divider(height: 1),
+        if (hasTopDivider && !isArchived) const Divider(height: 1),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -164,6 +234,7 @@ class PostCard extends StatelessWidget {
               label: post.likesCount.toString(),
               onPressed: onLike,
               isActive: post.isLiked,
+              disabled: isArchived,
             ),
             _buildFooterButton(
               context: context,
@@ -172,6 +243,7 @@ class PostCard extends StatelessWidget {
               onPressed: () {
                 context.push('/posts/${post.id}/comments');
               },
+              disabled: isArchived,
             ),
             _buildFooterButton(
               context: context,
@@ -180,6 +252,7 @@ class PostCard extends StatelessWidget {
               onPressed: () {
                 // TODO: Implementar lógica de compartilhar
               },
+              disabled: isArchived,
             ),
           ],
         ),
@@ -193,9 +266,10 @@ class PostCard extends StatelessWidget {
     required String label,
     required VoidCallback onPressed,
     bool isActive = false,
+    bool disabled = false,
   }) {
     return TextButton.icon(
-      onPressed: onPressed,
+      onPressed: disabled ? null : onPressed,
       icon: Icon(icon, size: 20),
       label: Text(label),
       style: TextButton.styleFrom(

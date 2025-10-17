@@ -1,4 +1,3 @@
-/// Represents an image associated with a post.
 class PostImage {
   final String id;
   final String postId;

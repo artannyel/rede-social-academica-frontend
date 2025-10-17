@@ -1,24 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
 import 'package:social_academic/features/posts/domain/usecases/get_my_posts.dart';
+import 'package:social_academic/features/posts/domain/usecases/delete_post.dart';
 import 'package:social_academic/features/posts/domain/usecases/like_post.dart';
 
-enum MyPostsListState {
-  idle,
-  loadingInitial,
-  loadingMore,
-  success,
-  error,
-}
+enum MyPostsListState { idle, loadingInitial, loadingMore, success, error }
 
 class MyPostsChangeNotifier extends ChangeNotifier {
   final GetMyPosts _getMyPostsUseCase;
   final LikePost _likePostUseCase;
+  final DeletePost _deletePostUseCase;
 
-  MyPostsChangeNotifier(this._getMyPostsUseCase, this._likePostUseCase);
+  MyPostsChangeNotifier(this._getMyPostsUseCase, this._likePostUseCase, this._deletePostUseCase);
 
   MyPostsListState _state = MyPostsListState.idle;
   MyPostsListState get state => _state;
+  bool _isDeleting = false;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -71,7 +68,13 @@ class MyPostsChangeNotifier extends ChangeNotifier {
         _currentPage--;
       },
       (paginatedResponse) {
-        _posts.addAll(paginatedResponse.data);
+        final newPosts = paginatedResponse.data
+            .where(
+              (newPost) =>
+                  !_posts.any((existingPost) => existingPost.id == newPost.id),
+            )
+            .toList();
+        _posts.addAll(newPosts);
         _hasMorePages = paginatedResponse.hasMorePages;
         _state = MyPostsListState.success;
       },
@@ -96,14 +99,43 @@ class MyPostsChangeNotifier extends ChangeNotifier {
 
     final result = await _likePostUseCase(postId: postId);
 
-    result.fold(
+    result.fold((failure) {
+      postToUpdate.isLiked = originalIsLiked;
+      postToUpdate.likesCount = originalLikesCount;
+      _errorMessage = failure.message;
+      notifyListeners();
+    }, (_) => _errorMessage = null);
+  }
+
+  void updatePost(Post updatedPost) {
+    final index = _posts.indexWhere((p) => p.id == updatedPost.id);
+    if (index != -1) {
+      _posts[index] = updatedPost;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> deletePost(String postId) async {
+    _isDeleting = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await _deletePostUseCase(postId: postId);
+
+    _isDeleting = false;
+
+    return result.fold(
       (failure) {
-        postToUpdate.isLiked = originalIsLiked;
-        postToUpdate.likesCount = originalLikesCount;
         _errorMessage = failure.message;
         notifyListeners();
+        return false;
       },
-      (_) => _errorMessage = null,
+      (_) {
+        _posts.removeWhere((p) => p.id == postId);
+        _errorMessage = null;
+        notifyListeners();
+        return true;
+      },
     );
   }
 }

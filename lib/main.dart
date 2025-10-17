@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:social_academic/features/posts/domain/usecases/edit_post.dart';
 import 'package:social_academic/features/posts/domain/usecases/like_comment.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'package:social_academic/features/authentication/data/datasources/auth_remote_datasource.dart';
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/app/core/navigation/app_router.dart';
 import 'package:social_academic/app/core/theme/app_theme.dart';
+import 'package:social_academic/features/posts/domain/usecases/force_delete_post.dart';
+import 'package:social_academic/features/posts/domain/usecases/delete_post.dart';
 import 'package:social_academic/app/core/theme/theme_notifier.dart';
 import 'package:social_academic/features/authentication/data/repositories/auth_repository_impl.dart';
 import 'package:social_academic/features/authentication/domain/usecases/get_user_profile.dart';
@@ -28,6 +31,7 @@ import 'package:social_academic/features/courses/domain/repositories/course_repo
 import 'package:social_academic/features/courses/domain/usecases/get_courses.dart';
 import 'package:social_academic/features/courses/presentation/provider/course_change_notifier.dart';
 import 'package:social_academic/features/posts/data/datasources/post_remote_datasource.dart';
+import 'package:social_academic/features/profile/presentation/providers/archived_posts_change_notifier.dart';
 import 'package:social_academic/features/profile/presentation/providers/my_posts_change_notifier.dart';
 import 'package:social_academic/features/profile/presentation/providers/edit_profile_change_notifier.dart';
 import 'package:social_academic/features/posts/data/repositories/post_repository_impl.dart';
@@ -37,6 +41,7 @@ import 'package:social_academic/features/posts/domain/usecases/create_comment.da
 import 'package:social_academic/features/posts/domain/usecases/get_comments.dart';
 import 'package:social_academic/features/posts/presentation/providers/post_change_notifier.dart';
 import 'package:social_academic/features/posts/domain/usecases/like_post.dart';
+import 'package:social_academic/features/posts/domain/usecases/restore_post.dart';
 import 'package:social_academic/features/posts/domain/usecases/get_my_posts.dart';
 import 'package:social_academic/features/posts/domain/usecases/get_posts.dart';
 import 'package:social_academic/features/posts/presentation/providers/tag_change_notifier.dart';
@@ -44,6 +49,7 @@ import 'package:social_academic/features/posts/data/datasources/tag_remote_datas
 import 'package:social_academic/features/posts/data/repositories/tag_repository_impl.dart';
 import 'package:social_academic/features/posts/domain/repositories/tag_repository.dart';
 import 'package:social_academic/features/posts/domain/usecases/get_tags.dart';
+import 'package:social_academic/features/posts/domain/usecases/get_archived_posts.dart';
 import 'package:social_academic/firebase_options.dart';
 
 late final FirebaseApp app;
@@ -164,8 +170,21 @@ class MyApp extends StatelessWidget {
         Provider<GetComments>(
           create: (context) => GetComments(context.read<PostRepository>()),
         ),
+        Provider<EditPost>(create: (context) => EditPost(context.read())),
         Provider<GetTags>(
           create: (context) => GetTags(context.read<TagRepository>()),
+        ),
+        Provider<DeletePost>(
+          create: (context) => DeletePost(context.read<PostRepository>()),
+        ),
+        Provider<GetArchivedPosts>(
+          create: (context) => GetArchivedPosts(context.read<PostRepository>()),
+        ),
+        Provider<RestorePost>(
+          create: (context) => RestorePost(context.read<PostRepository>()),
+        ),
+        Provider<ForceDeletePost>(
+          create: (context) => ForceDeletePost(context.read<PostRepository>()),
         ),
         Provider<GetCurrentUser>(
           create: (context) => GetCurrentUser(context.read<AuthRepository>()),
@@ -224,6 +243,14 @@ class MyApp extends StatelessWidget {
           create: (context) => MyPostsChangeNotifier(
             context.read<GetMyPosts>(),
             context.read<LikePost>(),
+            context.read<DeletePost>(),
+          ),
+        ),
+        ChangeNotifierProvider<ArchivedPostsChangeNotifier>(
+          create: (context) => ArchivedPostsChangeNotifier(
+            context.read<GetArchivedPosts>(),
+            context.read<RestorePost>(),
+            context.read<ForceDeletePost>(),
           ),
         ),
       ],

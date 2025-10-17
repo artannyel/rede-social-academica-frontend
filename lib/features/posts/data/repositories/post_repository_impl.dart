@@ -42,6 +42,119 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
+  Future<Either<Failure, Post>> editPost({
+    required String postId,
+    required String publication,
+    required List<String> tags,
+    required List<String> courses,
+    List<XFile>? newImages,
+    List<String>? removedImageIds,
+  }) async {
+    try {
+      final postModel = await remoteDataSource.editPost(
+        postId: postId,
+        publication: publication,
+        tags: tags,
+        courses: courses,
+        newImages: newImages,
+        removedImageIds: removedImageIds,
+      );
+      return Right(postModel.toEntity());
+    } on DioException catch (e) {
+      String errorMessage =
+          'Não foi possível criar a publicação. Verifique sua conexão.';
+      if (e.response?.data is Map<String, dynamic>) {
+        errorMessage = e.response!.data['message'] ?? errorMessage;
+      }
+      return Left(ServerFailure(errorMessage));
+    } catch (e) {
+      return Left(ServerFailure('Ocorreu um erro inesperado: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deletePost({required String postId}) async {
+    try {
+      await remoteDataSource.deletePost(postId: postId);
+      return const Right(null);
+    } on DioException catch (e) {
+      String errorMessage =
+          'Não foi possível arquivar a publicação. Verifique sua conexão.';
+      if (e.response?.data is Map<String, dynamic>) {
+        errorMessage = e.response!.data['message'] ?? errorMessage;
+      }
+      return Left(ServerFailure(errorMessage));
+    } catch (e) {
+      return Left(
+          ServerFailure('Ocorreu um erro inesperado: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResponse<Post>>> getArchivedPosts(
+      {required int page}) async {
+    try {
+      final paginatedModel =
+          await remoteDataSource.getArchivedPosts(page: page);
+      return Right(paginatedModel.toEntity<Post>());
+    } on DioException catch (e) {
+      log('DioException in getArchivedPosts: ${e.response?.data}');
+      String errorMessage =
+          'Não foi possível buscar as publicações arquivadas.';
+      if (e.response?.data is Map<String, dynamic>) {
+        errorMessage = e.response!.data['message'] ?? errorMessage;
+      }
+      return Left(ServerFailure(errorMessage));
+    } catch (e, stackTrace) {
+      log('Unexpected error in getArchivedPosts',
+          error: e, stackTrace: stackTrace);
+      return Left(
+        ServerFailure(
+          'Ocorreu um erro inesperado ao buscar os arquivados: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> restorePost({required String postId}) async {
+    try {
+      await remoteDataSource.restorePost(postId: postId);
+      return const Right(null);
+    } on DioException catch (e) {
+      String errorMessage = 'Não foi possível restaurar a publicação.';
+      if (e.response?.data is Map<String, dynamic>) {
+        errorMessage = e.response!.data['message'] ?? errorMessage;
+      }
+      return Left(ServerFailure(errorMessage));
+    } catch (e) {
+      return Left(
+          ServerFailure('Ocorreu um erro inesperado: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> forceDeletePost(
+      {required String postId}) async {
+    try {
+      await remoteDataSource.forceDeletePost(postId: postId);
+      return const Right(null);
+    } on DioException catch (e) {
+      String errorMessage = 'Não foi possível excluir a publicação.';
+      if (e.response?.data is Map<String, dynamic>) {
+        errorMessage = e.response!.data['message'] ?? errorMessage;
+      }
+      return Left(ServerFailure(errorMessage));
+    } catch (e) {
+      return Left(
+        ServerFailure(
+          'Ocorreu um erro inesperado ao excluir: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  @override
   Future<Either<Failure, PaginatedResponse<Post>>> getPosts({
     required int page,
   }) async {

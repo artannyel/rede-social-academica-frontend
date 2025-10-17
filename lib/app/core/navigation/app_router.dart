@@ -6,6 +6,8 @@ import 'package:social_academic/features/authentication/presentation/pages/email
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/home/presentation/pages/home_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/create_post_page.dart';
+import 'package:social_academic/features/posts/domain/entities/post.dart';
+import 'package:social_academic/features/posts/presentation/pages/edit_post_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/post_comments_page.dart';
 import 'package:social_academic/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:social_academic/features/profile/presentation/pages/user_profile_page.dart';
@@ -89,6 +91,27 @@ GoRouter appRouter(AuthNotifier authNotifier) {
           return CustomTransitionPage(
             key: state.pageKey,
             child: const CreatePostPage(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              // Animação de slide de baixo para cima
+              const begin = Offset(0.0, 1.0);
+              const end = Offset.zero;
+              final tween = Tween(begin: begin, end: end)
+                  .chain(CurveTween(curve: Curves.easeInOut));
+              return SlideTransition(
+                  position: animation.drive(tween), child: child);
+            },
+          );
+        },
+      ),
+      GoRoute(
+        path: '/posts/:id/edit',
+        name: 'edit-post',
+        pageBuilder: (context, state) {
+          final post = state.extra as Post;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: EditPostPage(post: post),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               // Animação de slide de baixo para cima

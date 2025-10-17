@@ -13,6 +13,25 @@ abstract class PostRepository {
     List<XFile>? images,
   });
 
+  Future<Either<Failure, Post>> editPost({
+    required String postId,
+    required String publication,
+    required List<String> tags,
+    required List<String> courses,
+    List<XFile>? newImages,
+    List<String>? removedImageIds,
+  });
+
+  Future<Either<Failure, void>> deletePost({required String postId});
+
+  Future<Either<Failure, PaginatedResponse<Post>>> getArchivedPosts({
+    required int page,
+  });
+
+  Future<Either<Failure, void>> restorePost({required String postId});
+
+  Future<Either<Failure, void>> forceDeletePost({required String postId});
+
   /// Busca uma lista paginada de posts.
   Future<Either<Failure, PaginatedResponse<Post>>> getPosts({
     required int page,

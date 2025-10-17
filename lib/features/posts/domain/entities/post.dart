@@ -1,5 +1,6 @@
 import 'package:social_academic/features/authentication/domain/entities/user.dart';
 import 'package:social_academic/features/courses/domain/entities/course.dart';
+import 'package:social_academic/features/posts/domain/entities/post_image.dart';
 import 'package:social_academic/features/posts/domain/entities/tag.dart';
 
 class Post {
@@ -10,7 +11,7 @@ class Post {
   final DateTime updatedAt;
   int likesCount;
   final int commentsCount;
-  final List<String> images; // Lista de URLs das imagens
+  final List<PostImage> images; // Lista de URLs das imagens
   final User user;
   final List<Course> courses;
   final List<Tag> tags;
@@ -39,7 +40,7 @@ class Post {
     DateTime? updatedAt,
     int? likesCount,
     int? commentsCount,
-    List<String>? images,
+    List<PostImage>? images,
     User? user,
     List<Course>? courses,
     List<Tag>? tags,

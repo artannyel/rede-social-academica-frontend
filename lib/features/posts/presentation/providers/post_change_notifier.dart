@@ -133,4 +133,13 @@ class PostChangeNotifier extends ChangeNotifier {
     _posts.insert(0, post);
     notifyListeners();
   }
+
+  /// Atualiza um post existente na lista.
+  void updatePost(Post updatedPost) {
+    final index = _posts.indexWhere((p) => p.id == updatedPost.id);
+    if (index != -1) {
+      _posts[index] = updatedPost;
+      notifyListeners();
+    }
+  }
 }

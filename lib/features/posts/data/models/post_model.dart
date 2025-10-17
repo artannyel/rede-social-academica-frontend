@@ -13,7 +13,7 @@ class PostModel extends Post {
     required super.updatedAt,
     required super.likesCount,
     required super.commentsCount,
-    required super.images,
+    required List<PostImageModel> super.images,
     required UserModel super.user,
     required List<CourseModel> super.courses,
     required List<TagModel> super.tags,
@@ -29,13 +29,17 @@ class PostModel extends Post {
       id: json['id'],
       publication: json['publication'],
       sketch: json['sketch'],
-      createdAt: DateTime.parse(json['created_at']).toLocal(), // Convertido para horário local
-      updatedAt: DateTime.parse(json['updated_at']).toLocal(), // Convertido para horário local
+      createdAt: DateTime.parse(
+        json['created_at'],
+      ).toLocal(), // Convertido para horário local
+      updatedAt: DateTime.parse(
+        json['updated_at'],
+      ).toLocal(), // Convertido para horário local
       likesCount: json['likes_count'],
       commentsCount: json['comments_count'],
       images:
           imagesData
-              ?.map((imageData) => PostImageModel.fromJson(imageData).urlImage)
+              ?.map((imageData) => PostImageModel.fromJson(imageData))
               .toList() ??
           [],
       isLiked: json['is_liked'] ?? false,
@@ -61,7 +65,9 @@ class PostModel extends Post {
       'comments_count': commentsCount,
       // A conversão de volta para o formato de imagem completo não é trivial
       // e geralmente não é necessária no cliente. Se for, precisaria de mais lógica.
-      'images': images,
+      'images': (images as List<PostImageModel>)
+          .map((img) => img.toJson())
+          .toList(),
       'is_liked': isLiked,
       'user': (user as UserModel).toJson(),
       'courses': (courses as List<CourseModel>)

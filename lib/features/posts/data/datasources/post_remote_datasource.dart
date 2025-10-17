@@ -13,6 +13,25 @@ abstract class PostRemoteDataSource {
     List<XFile>? images,
   });
 
+  Future<PostModel> editPost({
+    required String postId,
+    required String publication,
+    required List<String> tags,
+    required List<String> courses,
+    List<XFile>? newImages,
+    List<String>? removedImageIds,
+  });
+
+  Future<void> deletePost({required String postId});
+
+  Future<PaginatedResponse<PostModel>> getArchivedPosts({
+    required int page,
+  });
+
+  Future<void> restorePost({required String postId});
+
+  Future<void> forceDeletePost({required String postId});
+
   /// Busca uma lista paginada de posts.
   Future<PaginatedResponse<PostModel>> getPosts({
     required int page,
@@ -97,6 +116,103 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   }
 
   @override
+  Future<PostModel> editPost({
+    required String postId,
+    required String publication,
+    required List<String> tags,
+    required List<String> courses,
+    List<XFile>? newImages,
+    List<String>? removedImageIds,
+  }) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    final formData = FormData();
+    formData.fields.add(MapEntry('publication', publication));
+    // Adiciona o método PUT, uma prática comum para enviar FormData para endpoints de atualização.
+    formData.fields.add(MapEntry('_method', 'PUT'));
+
+    for (final tagId in tags) {
+      formData.fields.add(MapEntry('tags[]', tagId));
+    }
+    for (final courseId in courses) {
+      formData.fields.add(MapEntry('courses[]', courseId));
+    }
+    if (removedImageIds != null) {
+      for (final imageId in removedImageIds) {
+        formData.fields.add(MapEntry('removed_images[]', imageId));
+      }
+    }
+
+    if (newImages != null && newImages.isNotEmpty) {
+      for (var image in newImages) {
+        final bytes = await image.readAsBytes();
+        formData.files.add(
+          MapEntry(
+            'images[]',
+            MultipartFile.fromBytes(bytes, filename: image.name),
+          ),
+        );
+      }
+    }
+
+    final response = await dio.post(
+      '/posts/$postId',
+      data: formData,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return PostModel.fromJson(response.data);
+  }
+
+  @override
+  Future<void> deletePost({required String postId}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    await dio.delete(
+      '/posts/$postId',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  @override
+  Future<PaginatedResponse<PostModel>> getArchivedPosts(
+      {required int page}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    final response = await dio.get(
+      '/posts/me/archived',
+      queryParameters: {'page': page},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    return PaginatedResponse.fromJson(response.data, PostModel.fromJson);
+  }
+
+  @override
+  Future<void> restorePost({required String postId}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    await dio.post(
+      '/posts/$postId/restore',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  @override
+  Future<void> forceDeletePost({required String postId}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    await dio.delete(
+      '/posts/$postId/force-delete',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  @override
   Future<PaginatedResponse<PostModel>> getPosts({required int page}) async {
     final token = await firebaseAuth.currentUser?.getIdToken();
     if (token == null) throw Exception('Usuário não autenticado');
@@ -118,7 +234,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     if (token == null) throw Exception('Usuário não autenticado');
 
     await dio.post(
-      '/posts/$postId/like',
+      '/posts/$postId/toggle-like',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }
@@ -129,7 +245,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     if (token == null) throw Exception('Usuário não autenticado');
 
     await dio.post(
-      '/comments/$commentId/like',
+      '/comments/$commentId/toggle-like',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }

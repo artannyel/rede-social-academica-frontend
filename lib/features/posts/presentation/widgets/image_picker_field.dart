@@ -2,11 +2,22 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
+import 'package:social_academic/features/posts/domain/entities/post_image.dart';
 
 class ImagePickerField extends StatefulWidget {
+  /// Callback para notificar sobre as novas imagens selecionadas.
   final Function(List<XFile>) onImagesSelected;
+  /// Lista de URLs de imagens já existentes no post.
+  final List<PostImage>? existingImages;
+  /// Callback para notificar quando uma imagem existente for removida.
+  final Function(PostImage)? onRemoveExistingImage;
 
-  const ImagePickerField({super.key, required this.onImagesSelected});
+  const ImagePickerField({
+    super.key,
+    required this.onImagesSelected,
+    this.existingImages,
+    this.onRemoveExistingImage,
+  });
 
   @override
   State<ImagePickerField> createState() => _ImagePickerFieldState();
@@ -14,23 +25,29 @@ class ImagePickerField extends StatefulWidget {
 
 class _ImagePickerFieldState extends State<ImagePickerField> {
   final ImagePicker _picker = ImagePicker();
-  List<XFile> _imageFiles = [];
+  List<XFile> _newImageFiles = [];
 
   Future<void> _pickImages() async {
     final List<XFile> pickedFiles = await _picker.pickMultiImage();
     if (pickedFiles.isNotEmpty) {
       setState(() {
-        _imageFiles = pickedFiles;
+        // Adiciona as novas imagens às já selecionadas, evitando duplicatas.
+        _newImageFiles.addAll(pickedFiles);
       });
-      widget.onImagesSelected(_imageFiles);
+      widget.onImagesSelected(_newImageFiles);
     }
   }
 
   void _removeImage(int index) {
     setState(() {
-      _imageFiles.removeAt(index);
+      _newImageFiles.removeAt(index);
     });
-    widget.onImagesSelected(_imageFiles);
+    widget.onImagesSelected(_newImageFiles);
+  }
+
+  void _removeExistingImage(PostImage image) {
+    // Chama o callback para que a página pai possa gerenciar o estado.
+    widget.onRemoveExistingImage?.call(image);
   }
 
   @override
@@ -44,58 +61,83 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
           label: const Text('Selecionar Imagens (Opcional)'),
         ),
         const SizedBox(height: 8),
-        if (_imageFiles.isNotEmpty)
+        _buildImagePreviews(),
+      ],
+    );
+  }
+
+  Widget _buildImagePreviews() {
+    final existing = widget.existingImages ?? [];
+    final totalImages = existing.length + _newImageFiles.length;
+
+    if (totalImages == 0) {
+      return const SizedBox.shrink();
+    }
+
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: totalImages,
+        itemBuilder: (context, index) {
+          // Exibe as imagens existentes primeiro
+          if (index < existing.length) {
+            final image = existing[index];
+            return _buildImagePreview(
+              Image.network(image.urlImage, fit: BoxFit.cover),
+              () => _removeExistingImage(image),
+            );
+          }
+          // Depois exibe as novas imagens
+          else {
+            final imageFile = _newImageFiles[index - existing.length];
+            final imageWidget = kIsWeb
+                ? Image.network(imageFile.path, fit: BoxFit.cover)
+                : Image.file(File(imageFile.path), fit: BoxFit.cover);
+            return _buildImagePreview(
+              imageWidget,
+              () => _removeImage(index - existing.length),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildImagePreview(Widget image, VoidCallback onRemove) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: Stack(
+        children: [
           SizedBox(
+            width: 100,
             height: 100,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _imageFiles.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: Stack(
-                    children: [
-                      ClipRRect(borderRadius: BorderRadius.circular(8),
-                        // Para a web, usamos Image.network com o path (que é uma URL de blob).
-                        // Para mobile, usamos Image.file.
-                        child: kIsWeb
-                            ? Image.network(
-                                _imageFiles[index].path,
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              )
-                            : Image.file(
-                                File(_imageFiles[index].path),
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              )),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: GestureDetector(
-                          onTap: () => _removeImage(index),
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Colors.black54,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.close,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: image,
             ),
           ),
-      ],
+          Positioned(
+            top: 4,
+            right: 4,
+            child: GestureDetector(
+              onTap: onRemove,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  color: Colors.black54,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

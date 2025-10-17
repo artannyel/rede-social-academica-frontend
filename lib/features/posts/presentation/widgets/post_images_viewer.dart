@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:social_academic/features/posts/domain/entities/post_image.dart';
 
 /// Um widget que exibe as imagens de um post de forma inteligente.
 /// - 1 imagem: ocupa a largura total.
 /// - 2 imagens: divide a largura.
 /// - 3+ imagens: mostra um grid 2x2 com um indicador de "+X" se houver mais de 4.
 class PostImagesViewer extends StatelessWidget {
-  final List<String> imageUrls;
+  final List<PostImage> images;
 
-  const PostImagesViewer({super.key, required this.imageUrls});
+  const PostImagesViewer({super.key, required this.images});
 
   @override
   Widget build(BuildContext context) {
-    if (imageUrls.isEmpty) {
+    if (images.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -20,21 +21,21 @@ class PostImagesViewer extends StatelessWidget {
       borderRadius: BorderRadius.circular(12.0),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          if (imageUrls.length == 1) {
-            return _buildImage(context, imageUrls[0], 0);
-          } else if (imageUrls.length == 2) {
+          if (images.length == 1) {
+            return _buildImage(context, images[0].urlImage, 0);
+          } else if (images.length == 2) {
             return Row(
               children: [
-                Expanded(child: _buildImage(context, imageUrls[0], 0)),
+                Expanded(child: _buildImage(context, images[0].urlImage, 0)),
                 const SizedBox(width: 2),
-                Expanded(child: _buildImage(context, imageUrls[1], 1)),
+                Expanded(child: _buildImage(context, images[1].urlImage, 1)),
               ],
             );
           } else {
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: imageUrls.length > 4 ? 4 : imageUrls.length,
+              itemCount: images.length > 4 ? 4 : images.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 2,
@@ -42,10 +43,10 @@ class PostImagesViewer extends StatelessWidget {
               ),
               itemBuilder: (context, index) {
                 // Se for o último item do grid e houver mais imagens
-                if (index == 3 && imageUrls.length > 4) {
+                if (index == 3 && images.length > 4) {
                   return _buildMoreIndicator(context, index);
                 }
-                return _buildImage(context, imageUrls[index], index);
+                return _buildImage(context, images[index].urlImage, index);
               },
             );
           }
@@ -85,12 +86,12 @@ class PostImagesViewer extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _buildImage(context, imageUrls[index], index),
+          _buildImage(context, images[index].urlImage, index),
           Container(
             color: Colors.black.withOpacity(0.5),
             child: Center(
               child: Text(
-                '+${imageUrls.length - 4}',
+                '+${images.length - 4}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -108,7 +109,7 @@ class PostImagesViewer extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => _FullScreenImageViewer(
-          imageUrls: imageUrls,
+          imageUrls: images.map((e) => e.urlImage).toList(),
           initialIndex: initialIndex,
         ),
       ),
