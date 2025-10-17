@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:social_academic/features/posts/presentation/providers/comment_change_notifier.dart';
 import 'package:social_academic/features/posts/presentation/widgets/comment_card.dart';
+import 'package:social_academic/features/posts/presentation/widgets/comment_card_skeleton.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
 import 'package:social_academic/shared/widgets/responsive_layout.dart';
 
@@ -119,7 +120,12 @@ class _PostCommentsViewState extends State<_PostCommentsView> {
 
   Widget _buildCommentsList(CommentChangeNotifier notifier) {
     if (notifier.state == CommentState.loading) {
-      return const Center(child: CircularProgressIndicator());
+      return ListView.builder(
+        padding: const EdgeInsets.all(8.0),
+        itemCount: 7, // Mostra 7 skeletons enquanto carrega
+        itemBuilder: (context, index) =>
+            const ResponsiveLayout(child: CommentCardSkeleton()),
+      );
     }
 
     if (notifier.state == CommentState.error && notifier.comments.isEmpty) {

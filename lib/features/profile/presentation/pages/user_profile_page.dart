@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:social_academic/features/courses/domain/entities/course.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_card.dart';
+import 'package:social_academic/features/posts/presentation/widgets/post_card_skeleton.dart';
 import 'package:social_academic/features/profile/presentation/providers/user_profile_change_notifier.dart';
 import 'package:social_academic/shared/widgets/responsive_layout.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
@@ -166,6 +167,16 @@ class _UserProfileViewState extends State<_UserProfileView> {
     BuildContext context,
     UserProfileChangeNotifier notifier,
   ) {
+    // Mostra o skeleton se estiver carregando os posts pela primeira vez
+    if (notifier.state == UserProfileState.loading && notifier.posts.isEmpty) {
+      return SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => const PostCardSkeleton(),
+          childCount: 3,
+        ),
+      );
+    }
+
     if (notifier.posts.isEmpty) {
       return const SliverFillRemaining(
         child: Center(

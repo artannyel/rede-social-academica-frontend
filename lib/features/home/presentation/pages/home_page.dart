@@ -7,6 +7,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/posts/presentation/providers/post_change_notifier.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_card.dart';
+import 'package:social_academic/features/posts/presentation/widgets/post_card_skeleton.dart';
 import 'package:social_academic/shared/widgets/responsive_layout.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
 
@@ -79,7 +80,10 @@ class _HomePageState extends State<HomePage> {
       body: Consumer<PostChangeNotifier>(
         builder: (context, notifier, child) {
           if (notifier.state == PostListState.loadingInitial) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView.builder(
+              itemCount: 5, // Mostra 5 skeletons enquanto carrega
+              itemBuilder: (context, index) => const PostCardSkeleton(),
+            );
           }
 
           if (notifier.state == PostListState.error && notifier.posts.isEmpty) {

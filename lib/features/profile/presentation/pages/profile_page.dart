@@ -5,6 +5,7 @@ import 'package:social_academic/features/authentication/presentation/provider/us
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:social_academic/features/courses/domain/entities/course.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_card.dart';
+import 'package:social_academic/features/posts/presentation/widgets/post_card_skeleton.dart';
 import 'package:social_academic/features/profile/presentation/providers/archived_posts_change_notifier.dart';
 import 'package:social_academic/features/profile/presentation/providers/my_posts_change_notifier.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
@@ -273,7 +274,9 @@ class _ProfilePageState extends State<ProfilePage>
       builder: (context, notifier, child) {
         // Estado de carregamento inicial
         if (notifier.state == MyPostsListState.loadingInitial) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView.builder(
+            itemCount: 3, // Mostra 3 skeletons enquanto carrega
+            itemBuilder: (context, index) => const PostCardSkeleton());
         }
 
         // Estado de erro na busca inicial
