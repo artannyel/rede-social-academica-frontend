@@ -90,6 +90,37 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, User>> updateUser({
+    required String name,
+    String? bio,
+    List<Map<String, dynamic>>? userCourses,
+    XFile? photo,
+    bool removePhoto = false,
+  }) async {
+    try {
+      final userModel = await remoteDataSource.updateUser(
+        name: name,
+        bio: bio,
+        userCourses: userCourses,
+        photo: photo,
+        removePhoto: removePhoto,
+      );
+      return Right(userModel);
+    } on firebase.FirebaseAuthException catch (e) {
+      // Erros relacionados ao Firebase, se houver (ex: reautenticação necessária)
+      return Left(ServerFailure('Erro de autenticação: ${e.code}'));
+    } on DioException {
+      return const Left(
+        ServerFailure('Não foi possível conectar ao servidor. Verifique sua internet.'),
+      );
+    } on Exception catch (e) {
+      // Captura a exceção genérica lançada pelo datasource
+      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+
+  @override
   Future<Either<Failure, void>> sendPasswordResetEmail({
     required String email,
   }) async {

@@ -59,7 +59,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       );
       notifier.resetState();
       // Volta para a tela anterior (home) após o sucesso.
-      context.pop();
+      context.go('/home');
     }
   }
 

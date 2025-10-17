@@ -7,6 +7,8 @@ import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/home/presentation/pages/home_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/create_post_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/post_comments_page.dart';
+import 'package:social_academic/features/profile/presentation/pages/edit_profile_page.dart';
+import 'package:social_academic/features/profile/presentation/pages/profile_page.dart';
 import 'package:social_academic/features/splash/presentation/pages/splash_page.dart';
 
 GoRouter appRouter(AuthNotifier authNotifier) {
@@ -115,6 +117,44 @@ GoRouter appRouter(AuthNotifier authNotifier) {
                   .chain(CurveTween(curve: Curves.easeInOut));
               return SlideTransition(
                   position: animation.drive(tween), child: child);
+            },
+          );
+        },
+      ),
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const ProfilePage(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              // Animação de slide da direita para a esquerda
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              final tween =
+                  Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
+              return SlideTransition(position: animation.drive(tween), child: child);
+            },
+          );
+        },
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        name: 'edit-profile',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const EditProfilePage(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              // Animação de slide de baixo para cima
+              const begin = Offset(0.0, 1.0);
+              const end = Offset.zero;
+              final tween =
+                  Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
+              return SlideTransition(position: animation.drive(tween), child: child);
             },
           );
         },

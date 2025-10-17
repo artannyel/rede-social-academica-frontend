@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:social_academic/app/core/theme/theme_notifier.dart';
+import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/posts/presentation/providers/post_change_notifier.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_card.dart';
+import 'package:social_academic/shared/widgets/user_avatar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -45,6 +47,19 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
+          Consumer<UserNotifier>(
+            builder: (context, userNotifier, _) {
+              return GestureDetector(
+                onTap: () => context.push('/profile'),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: UserAvatar(
+                    photoUrl: userNotifier.appUser?.photoUrl,
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.brightness_6),
             tooltip: 'Mudar Tema',

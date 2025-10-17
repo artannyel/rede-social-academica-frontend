@@ -18,6 +18,14 @@ abstract class AuthRepository {
     XFile? photo,
   });
 
+  Future<Either<Failure, User>> updateUser({
+    required String name,
+    String? bio,
+    List<Map<String, dynamic>>? userCourses,
+    XFile? photo,
+    bool removePhoto,
+  });
+
   Future<Either<Failure, void>> sendPasswordResetEmail({required String email});
   Future<Either<Failure, User>> getCurrentUser();
 }

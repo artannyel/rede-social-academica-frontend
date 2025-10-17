@@ -18,6 +18,7 @@ import 'package:social_academic/features/authentication/domain/usecases/login.da
 import 'package:social_academic/features/authentication/domain/usecases/register.dart';
 import 'package:social_academic/features/authentication/domain/usecases/send_password_reset_email.dart';
 import 'package:social_academic/features/authentication/domain/usecases/get_current_user.dart';
+import 'package:social_academic/features/authentication/domain/usecases/update_user.dart';
 import 'package:social_academic/features/authentication/presentation/provider/login_change_notifier.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/courses/data/datasources/course_remote_datasource.dart';
@@ -26,6 +27,7 @@ import 'package:social_academic/features/courses/domain/repositories/course_repo
 import 'package:social_academic/features/courses/domain/usecases/get_courses.dart';
 import 'package:social_academic/features/courses/presentation/provider/course_change_notifier.dart';
 import 'package:social_academic/features/posts/data/datasources/post_remote_datasource.dart';
+import 'package:social_academic/features/profile/presentation/providers/edit_profile_change_notifier.dart';
 import 'package:social_academic/features/posts/data/repositories/post_repository_impl.dart';
 import 'package:social_academic/features/posts/domain/repositories/post_repository.dart';
 import 'package:social_academic/features/posts/domain/usecases/create_post.dart';
@@ -165,6 +167,9 @@ class MyApp extends StatelessWidget {
         Provider<GetCurrentUser>(
           create: (context) => GetCurrentUser(context.read<AuthRepository>()),
         ),
+        Provider<UpdateUser>(
+          create: (context) => UpdateUser(context.read<AuthRepository>()),
+        ),
 
         // Camada de Apresentação (Presentation) - Notifiers de Estado Global
         ChangeNotifierProvider<UserNotifier>(
@@ -198,6 +203,12 @@ class MyApp extends StatelessWidget {
           create: (context) => PostChangeNotifier(
             context.read<GetPosts>(),
             context.read<LikePost>(),
+          ),
+        ),
+        ChangeNotifierProvider<EditProfileChangeNotifier>(
+          create: (context) => EditProfileChangeNotifier(
+            context.read<UpdateUser>(),
+            context.read<UserNotifier>(),
           ),
         ),
       ],

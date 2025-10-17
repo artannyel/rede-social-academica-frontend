@@ -15,6 +15,13 @@ abstract class AuthRemoteDataSource {
     XFile? photo,
   });
   Future<void> sendPasswordResetEmail({required String email});
+  Future<UserModel> updateUser({
+    required String name,
+    String? bio,
+    List<Map<String, dynamic>>? userCourses,
+    XFile? photo,
+    bool removePhoto,
+  });
   Future<UserModel> getCurrentUser();
 }
 
@@ -136,6 +143,79 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         code: 'backend-registration-failed',
         message: errorMessage,
       );
+    }
+  }
+
+  @override
+  Future<UserModel> updateUser({
+    required String name,
+    String? bio,
+    List<Map<String, dynamic>>? userCourses,
+    XFile? photo,
+    bool removePhoto = false,
+  }) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para atualizar dados.');
+    }
+
+    try {
+      dynamic requestData;
+
+      // Se uma nova foto for enviada, sempre usamos FormData.
+      if (photo != null) {
+        final formData = FormData();
+        formData.fields.add(MapEntry('name', name));
+        if (bio != null) formData.fields.add(MapEntry('bio', bio));
+
+        // Adiciona os cursos no formato de array esperado pelo backend.
+        if (userCourses != null) {
+          for (var i = 0; i < userCourses.length; i++) {
+            final courseMap = userCourses[i];
+            courseMap.forEach((key, value) {
+              final val = key == 'finished'
+                  ? (value == true ? '1' : '0')
+                  : value.toString();
+              formData.fields.add(MapEntry('courses[$i][$key]', val));
+            });
+          }
+        }
+
+        final bytes = await photo.readAsBytes();
+        formData.files.add(
+          MapEntry(
+            'photo',
+            MultipartFile.fromBytes(bytes, filename: photo.name),
+          ),
+        );
+        requestData = formData;
+      } else {
+        // Se não houver foto nova, enviamos como JSON.
+        requestData = {
+          'name': name,
+          if (bio != null) 'bio': bio,
+          if (userCourses != null) 'courses': userCourses,
+          'remove_photo': removePhoto, // Flag para o backend remover a foto
+        };
+      }
+
+      // Usamos POST para o endpoint de update, pois é comum para lidar com FormData.
+      // O backend pode internamente tratar como um PUT/PATCH.
+      final response = await dio.post(
+        '/user/me',
+        data: requestData,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      return UserModel.fromJson(response.data);
+    } on DioException catch (e) {
+      String errorMessage =
+          'Não foi possível atualizar o perfil. Tente novamente.';
+      if (e.response?.data is Map<String, dynamic>) {
+        errorMessage = e.response!.data['message'] ?? errorMessage;
+      }
+      // Lançamos uma exceção que será capturada pelo repositório.
+      throw Exception(errorMessage);
     }
   }
 
