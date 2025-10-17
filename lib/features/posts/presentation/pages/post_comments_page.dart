@@ -4,15 +4,33 @@ import 'package:social_academic/features/posts/presentation/providers/comment_ch
 import 'package:social_academic/features/posts/presentation/widgets/comment_card.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
 
-class PostCommentsPage extends StatefulWidget {
+class PostCommentsPage extends StatelessWidget {
   final String postId;
   const PostCommentsPage({super.key, required this.postId});
 
   @override
-  State<PostCommentsPage> createState() => _PostCommentsPageState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      // 1. O Provider agora é criado aqui, no widget pai.
+      create: (context) => CommentChangeNotifier(
+        postId: postId,
+        getComments: context.read(),
+        createComment: context.read(),
+        likeComment: context.read(),
+      ),
+      child: const _PostCommentsView(), // 2. O conteúdo da página agora está em um widget filho.
+    );
+  }
 }
 
-class _PostCommentsPageState extends State<PostCommentsPage> {
+class _PostCommentsView extends StatefulWidget {
+  const _PostCommentsView();
+
+  @override
+  State<_PostCommentsView> createState() => _PostCommentsViewState();
+}
+
+class _PostCommentsViewState extends State<_PostCommentsView> {
   final _scrollController = ScrollController();
   final _commentController = TextEditingController();
   final _commentFocusNode = FocusNode();
@@ -80,19 +98,14 @@ class _PostCommentsPageState extends State<PostCommentsPage> {
       appBar: AppBar(
         title: const Text('Comentários'),
       ),
-      body: ChangeNotifierProvider(
-        // Cria um notifier específico para esta página/post
-        create: (context) => CommentChangeNotifier(
-          postId: widget.postId,
-          getComments: context.read(),
-          createComment: context.read(),
-          likeComment: context.read(),
-        ),
-        child: Consumer<CommentChangeNotifier>(
-          builder: (context, notifier, child) {
-            return Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 600),
+      resizeToAvoidBottomInset: false,
+      body: Consumer<CommentChangeNotifier>(
+        builder: (context, notifier, child) {
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Padding(
+                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom),
                 child: Column(
                   children: [
                     Expanded(
@@ -102,9 +115,9 @@ class _PostCommentsPageState extends State<PostCommentsPage> {
                   ],
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
