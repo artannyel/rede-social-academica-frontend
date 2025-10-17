@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:social_academic/features/courses/domain/entities/course.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_card.dart';
 import 'package:social_academic/features/profile/presentation/providers/my_posts_change_notifier.dart';
@@ -183,28 +184,39 @@ class _ProfilePageState extends State<ProfilePage> {
         }
 
         // Lista de posts
-        return SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              if (index == notifier.posts.length) {
-                return const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              final post = notifier.posts[index];
-              // Centraliza e constrange cada PostCard individualmente.
-              return ResponsiveLayout(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: PostCard(
-                    post: post,
-                    onLike: () => notifier.toggleLike(post.id),
+        return AnimationLimiter(
+          child: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                if (index == notifier.posts.length) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                final post = notifier.posts[index];
+                return AnimationConfiguration.staggeredList(
+                  position: index,
+                  duration: const Duration(milliseconds: 375),
+                  child: SlideAnimation(
+                    verticalOffset: 50.0,
+                    child: FadeInAnimation(
+                      child: ResponsiveLayout(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: PostCard(
+                            post: post,
+                            onLike: () => notifier.toggleLike(post.id),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              );
-            },
-            childCount: notifier.posts.length + (notifier.hasMorePages ? 1 : 0),
+                );
+              },
+              childCount:
+                  notifier.posts.length + (notifier.hasMorePages ? 1 : 0),
+            ),
           ),
         );
       },

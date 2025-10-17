@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:social_academic/app/core/theme/theme_notifier.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/posts/presentation/providers/post_change_notifier.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_card.dart';
@@ -22,12 +23,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Busca os posts iniciais assim que a tela é construída.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PostChangeNotifier>().fetchInitialPosts();
     });
 
-    // Adiciona um listener para o scroll para implementar o "scroll infinito".
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
@@ -72,8 +71,6 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.logout),
             tooltip: 'Sair',
             onPressed: () {
-              // Acessa o FirebaseAuth via Provider e executa o signOut.
-              // O AuthNotifier irá detectar a mudança e o GoRouter fará o redirecionamento.
               Provider.of<FirebaseAuth>(context, listen: false).signOut();
             },
           ),
@@ -81,12 +78,10 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Consumer<PostChangeNotifier>(
         builder: (context, notifier, child) {
-          // Estado de carregamento inicial
           if (notifier.state == PostListState.loadingInitial) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Estado de erro na busca inicial
           if (notifier.state == PostListState.error && notifier.posts.isEmpty) {
             return Center(
               child: Column(
@@ -103,7 +98,6 @@ class _HomePageState extends State<HomePage> {
             );
           }
 
-          // Lista de posts ou lista vazia
           if (notifier.posts.isEmpty) {
             return const Center(
               child: Text('Nenhuma publicação encontrada.'),
@@ -112,27 +106,38 @@ class _HomePageState extends State<HomePage> {
 
           return RefreshIndicator(
             onRefresh: () => notifier.fetchInitialPosts(),
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: notifier.posts.length +
-                  (notifier.hasMorePages ? 1 : 0), // Adiciona espaço para o loader
-              itemBuilder: (context, index) {
-                // Se for o último item e ainda houver páginas, mostra o loader
-                if (index == notifier.posts.length) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Center(child: CircularProgressIndicator()),
+            child: AnimationLimiter(
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: notifier.posts.length +
+                    (notifier.hasMorePages
+                        ? 1
+                        : 0),
+                itemBuilder: (context, index) {
+                  if (index == notifier.posts.length) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  final post = notifier.posts[index];
+                  return AnimationConfiguration.staggeredList(
+                    position: index,
+                    duration: const Duration(milliseconds: 375),
+                    child: SlideAnimation(
+                      verticalOffset: 50.0,
+                      child: FadeInAnimation(
+                        child: ResponsiveLayout(
+                          child: PostCard(
+                            post: post,
+                            onLike: () => notifier.toggleLike(post.id),
+                          ),
+                        ),
+                      ),
+                    ),
                   );
-                }
-                // Renderiza o card do post
-                final post = notifier.posts[index];
-                return ResponsiveLayout(
-                  child: PostCard(
-                    post: post,
-                    onLike: () => notifier.toggleLike(post.id),
-                  ),
-                );
-              },
+                },
+              ),
             ),
           );
         },
