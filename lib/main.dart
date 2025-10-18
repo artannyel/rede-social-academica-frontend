@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:social_academic/features/posts/domain/usecases/edit_post.dart';
@@ -58,8 +57,8 @@ late final Dio dio;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Carrega as variáveis de ambiente do arquivo .env
-  await dotenv.load(fileName: ".env");
+  // A variável de ambiente BASE_URL agora é fornecida via --dart-define
+  const baseUrl = String.fromEnvironment('BASE_URL');
 
   // Remove o # (hash) da URL na web
   setPathUrlStrategy();
@@ -71,13 +70,12 @@ void main() async {
   auth = FirebaseAuth.instanceFor(app: app);
   dio = Dio(
     BaseOptions(
-      baseUrl: dotenv.env['BASE_URL']!,
+      baseUrl: baseUrl,
       headers: {'Content-Type': 'application/json', 'accept': 'application/json'},
       contentType: 'application/json',
     ),
   );
-  await Future.delayed(Duration(seconds: 1));
-
+  
   GoRouter.optionURLReflectsImperativeAPIs = true;
 
   runApp(const MyApp());

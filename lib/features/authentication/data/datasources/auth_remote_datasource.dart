@@ -1,8 +1,12 @@
+import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:social_academic/features/authentication/data/models/user_profile_model.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 import '../models/user_model.dart';
+import 'package:social_academic/app/core/utils/image_converter.dart';
 
 // Contrato para a fonte de dados remota
 abstract class AuthRemoteDataSource {
@@ -101,12 +105,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           }
         }
 
-        // final fileName = photo.path.split('/').last;
-        final bytes = await photo.readAsBytes();
+        // Processa e converte a imagem se necessário
+        final processedImage = await processAndConvertImage(photo);
+        final bytes = Uint8List.fromList(processedImage['bytes'] as List<int>);
+        final fileName = processedImage['name'] as String;
+        final mimeType = lookupMimeType(fileName, headerBytes: bytes);
+
         formData.files.add(
           MapEntry(
             'photo',
-            MultipartFile.fromBytes(bytes, filename: photo.name),
+            MultipartFile.fromBytes(bytes,
+                filename: fileName, contentType: mimeType != null ? MediaType.parse(mimeType) : null),
           ),
         );
         requestData = formData;
@@ -181,11 +190,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           }
         }
 
-        final bytes = await photo.readAsBytes();
+        // Processa e converte a imagem se necessário
+        final processedImage = await processAndConvertImage(photo);
+        final bytes = Uint8List.fromList(processedImage['bytes'] as List<int>);
+        final fileName = processedImage['name'] as String;
+        final mimeType = lookupMimeType(fileName, headerBytes: bytes);
+
         formData.files.add(
           MapEntry(
             'photo',
-            MultipartFile.fromBytes(bytes, filename: photo.name),
+            MultipartFile.fromBytes(bytes,
+                filename: fileName, contentType: mimeType != null ? MediaType.parse(mimeType) : null),
           ),
         );
         requestData = formData;

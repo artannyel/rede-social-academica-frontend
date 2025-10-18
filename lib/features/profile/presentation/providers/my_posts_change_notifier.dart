@@ -15,7 +15,6 @@ class MyPostsChangeNotifier extends ChangeNotifier {
 
   MyPostsListState _state = MyPostsListState.idle;
   MyPostsListState get state => _state;
-  bool _isDeleting = false;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -116,13 +115,10 @@ class MyPostsChangeNotifier extends ChangeNotifier {
   }
 
   Future<bool> deletePost(String postId) async {
-    _isDeleting = true;
     _errorMessage = null;
     notifyListeners();
 
     final result = await _deletePostUseCase(postId: postId);
-
-    _isDeleting = false;
 
     return result.fold(
       (failure) {

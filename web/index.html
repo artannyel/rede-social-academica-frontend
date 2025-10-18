@@ -31,6 +31,20 @@
 
   <title>social_academic</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- HEIC to any converter -->
+  <script src="heic2any-3428539.min.js" type="application/javascript"></script>
+  <script>
+  function executeHeic2any(blob, multiple, toType, quality, gifInterval) {
+    return heic2any({
+      blob,
+      multiple: multiple,
+      toType: toType,
+      quality: quality,
+      gifInterval: gifInterval
+    });
+  }
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

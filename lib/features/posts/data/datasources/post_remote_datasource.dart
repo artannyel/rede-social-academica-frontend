@@ -1,9 +1,13 @@
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:social_academic/app/core/data/models/paginated_response.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 import 'package:social_academic/features/posts/data/models/comment_model.dart';
 import 'package:social_academic/features/posts/data/models/post_model.dart';
+import 'package:social_academic/app/core/utils/image_converter.dart';
 
 abstract class PostRemoteDataSource {
   Future<PostModel> createPost({
@@ -94,12 +98,18 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     if (images != null && images.isNotEmpty) {
       for (var i = 0; i < images.length; i++) {
         final image = images[i];
-        final bytes = await image.readAsBytes();
+        // Processa e converte a imagem se necessário
+        final processedImage = await processAndConvertImage(image);
+        final bytes = Uint8List.fromList(processedImage['bytes'] as List<int>);
+        final fileName = processedImage['name'] as String;
+        final mimeType = lookupMimeType(fileName, headerBytes: bytes);
+
         formData.files.add(
           MapEntry(
             'images[]',
             // Usamos fromBytes, que funciona tanto em mobile quanto na web.
-            MultipartFile.fromBytes(bytes, filename: image.name),
+            MultipartFile.fromBytes(bytes,
+                filename: fileName, contentType: mimeType != null ? MediaType.parse(mimeType) : null),
           ),
         );
       }
@@ -146,11 +156,17 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
     if (newImages != null && newImages.isNotEmpty) {
       for (var image in newImages) {
-        final bytes = await image.readAsBytes();
+        // Processa e converte a imagem se necessário
+        final processedImage = await processAndConvertImage(image);
+        final bytes = Uint8List.fromList(processedImage['bytes'] as List<int>);
+        final fileName = processedImage['name'] as String;
+        final mimeType = lookupMimeType(fileName, headerBytes: bytes);
+
         formData.files.add(
           MapEntry(
             'images[]',
-            MultipartFile.fromBytes(bytes, filename: image.name),
+            MultipartFile.fromBytes(bytes,
+                filename: fileName, contentType: mimeType != null ? MediaType.parse(mimeType) : null),
           ),
         );
       }
