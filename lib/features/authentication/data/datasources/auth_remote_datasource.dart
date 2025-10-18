@@ -42,16 +42,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String email,
     required String password,
   }) async {
-    // 1. Autentica com Firebase
-    final userCredential = await firebaseAuth.signInWithEmailAndPassword(
+    await firebaseAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
 
-    // 2. Pega o token do Firebase
-    await userCredential.user?.getIdToken();
-
-    // 3. Reutiliza a lógica de buscar o usuário atual
     return await getCurrentUser();
   }
 
