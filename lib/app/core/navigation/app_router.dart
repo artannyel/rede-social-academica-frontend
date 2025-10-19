@@ -10,8 +10,8 @@ import 'package:social_academic/features/posts/domain/entities/post.dart';
 import 'package:social_academic/features/posts/presentation/pages/edit_post_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/post_comments_page.dart';
 import 'package:social_academic/features/profile/presentation/pages/edit_profile_page.dart';
+import 'package:social_academic/features/profile/presentation/pages/profile_page_provider.dart';
 import 'package:social_academic/features/profile/presentation/pages/user_profile_page.dart';
-import 'package:social_academic/features/profile/presentation/pages/profile_page.dart';
 import 'package:social_academic/features/splash/presentation/pages/splash_page.dart';
 
 GoRouter appRouter(AuthNotifier authNotifier) {
@@ -151,7 +151,7 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         pageBuilder: (context, state) {
           return CustomTransitionPage(
             key: state.pageKey,
-            child: const ProfilePage(),
+            child: const ProfilePageProvider(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               // Animação de slide da direita para a esquerda

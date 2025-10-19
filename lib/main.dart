@@ -32,8 +32,6 @@ import 'package:social_academic/features/courses/domain/repositories/course_repo
 import 'package:social_academic/features/courses/domain/usecases/get_courses.dart';
 import 'package:social_academic/features/courses/presentation/provider/course_change_notifier.dart';
 import 'package:social_academic/features/posts/data/datasources/post_remote_datasource.dart';
-import 'package:social_academic/features/profile/presentation/providers/archived_posts_change_notifier.dart';
-import 'package:social_academic/features/profile/presentation/providers/my_posts_change_notifier.dart';
 import 'package:social_academic/features/profile/presentation/providers/edit_profile_change_notifier.dart';
 import 'package:social_academic/features/posts/data/repositories/post_repository_impl.dart';
 import 'package:social_academic/features/posts/domain/repositories/post_repository.dart';
@@ -243,20 +241,6 @@ class MyApp extends StatelessWidget {
           create: (context) => EditProfileChangeNotifier(
             context.read<UpdateUser>(),
             context.read<UserNotifier>(),
-          ),
-        ),
-        ChangeNotifierProvider<MyPostsChangeNotifier>(
-          create: (context) => MyPostsChangeNotifier(
-            context.read<GetMyPosts>(),
-            context.read<LikePost>(),
-            context.read<DeletePost>(),
-          ),
-        ),
-        ChangeNotifierProvider<ArchivedPostsChangeNotifier>(
-          create: (context) => ArchivedPostsChangeNotifier(
-            context.read<GetArchivedPosts>(),
-            context.read<RestorePost>(),
-            context.read<ForceDeletePost>(),
           ),
         ),
       ],

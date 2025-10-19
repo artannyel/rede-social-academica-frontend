@@ -240,4 +240,46 @@ class AuthRepositoryImpl implements AuthRepository {
       );
     }
   }
+
+  @override
+  Future<Either<Failure, PaginatedResponse<UserRating>>> getReceivedRatings(
+      {required int page}) async {
+    try {
+      final paginatedRatingsModel =
+          await remoteDataSource.getReceivedRatings(page: page);
+      return Right(paginatedRatingsModel.toEntity<UserRating>());
+    } on DioException {
+      return const Left(
+        ServerFailure(
+          'Não foi possível carregar as avaliações. Verifique sua conexão.',
+        ),
+      );
+    } on Exception catch (e) {
+      return Left(
+        ServerFailure(
+          e.toString().replaceFirst('Exception: ', ''),
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResponse<UserRating>>> getMadeRatings(
+      {required int page}) async {
+    try {
+      final paginatedRatingsModel =
+          await remoteDataSource.getMadeRatings(page: page);
+      return Right(paginatedRatingsModel.toEntity<UserRating>());
+    } on DioException {
+      return const Left(
+        ServerFailure(
+          'Não foi possível carregar as avaliações. Verifique sua conexão.',
+        ),
+      );
+    } on Exception catch (e) {
+      return Left(
+        ServerFailure(e.toString().replaceFirst('Exception: ', '')),
+      );
+    }
+  }
 }

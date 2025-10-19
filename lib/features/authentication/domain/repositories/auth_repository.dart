@@ -46,4 +46,11 @@ abstract class AuthRepository {
     required String userId,
     required int page,
   });
+
+  Future<Either<Failure, PaginatedResponse<UserRating>>> getReceivedRatings({
+    required int page,
+  });
+  Future<Either<Failure, PaginatedResponse<UserRating>>> getMadeRatings({
+    required int page,
+  });
 }

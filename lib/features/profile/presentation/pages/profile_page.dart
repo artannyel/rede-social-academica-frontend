@@ -7,8 +7,11 @@ import 'package:social_academic/features/courses/domain/entities/course.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_card.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_card_skeleton.dart';
 import 'package:social_academic/features/profile/presentation/providers/archived_posts_change_notifier.dart';
+import 'package:social_academic/features/profile/presentation/providers/made_ratings_change_notifier.dart';
+import 'package:social_academic/features/profile/presentation/providers/received_ratings_change_notifier.dart';
 import 'package:social_academic/features/profile/presentation/providers/my_posts_change_notifier.dart';
 import 'package:social_academic/shared/widgets/app_snackbar.dart';
+import 'package:social_academic/shared/helpers/time_ago_helper.dart';
 import 'package:social_academic/shared/widgets/responsive_layout.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
 
@@ -22,16 +25,20 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
   final _myPostsScrollController = ScrollController();
+  final _madeRatingsScrollController = ScrollController();
+  final _receivedRatingsScrollController = ScrollController();
   final _archivedScrollController = ScrollController();
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MyPostsChangeNotifier>().fetchInitialPosts();
+      context.read<MadeRatingsChangeNotifier>().fetchInitialRatings();
+      context.read<ReceivedRatingsChangeNotifier>().fetchInitialRatings();
       context.read<ArchivedPostsChangeNotifier>().fetchInitialPosts();
     });
 
@@ -39,6 +46,20 @@ class _ProfilePageState extends State<ProfilePage>
       if (_myPostsScrollController.position.pixels >=
           _myPostsScrollController.position.maxScrollExtent - 200) {
         context.read<MyPostsChangeNotifier>().fetchMorePosts();
+      }
+    });
+
+    _madeRatingsScrollController.addListener(() {
+      if (_madeRatingsScrollController.position.pixels >=
+          _madeRatingsScrollController.position.maxScrollExtent - 200) {
+        context.read<MadeRatingsChangeNotifier>().fetchMoreRatings();
+      }
+    });
+
+    _receivedRatingsScrollController.addListener(() {
+      if (_receivedRatingsScrollController.position.pixels >=
+          _receivedRatingsScrollController.position.maxScrollExtent - 200) {
+        context.read<ReceivedRatingsChangeNotifier>().fetchMoreRatings();
       }
     });
 
@@ -53,6 +74,8 @@ class _ProfilePageState extends State<ProfilePage>
   @override
   void dispose() {
     _myPostsScrollController.dispose();
+    _madeRatingsScrollController.dispose();
+    _receivedRatingsScrollController.dispose();
     _archivedScrollController.dispose();
     _tabController.dispose();
     super.dispose();
@@ -251,6 +274,8 @@ class _ProfilePageState extends State<ProfilePage>
                       controller: _tabController,
                       tabs: const [
                         Tab(text: 'Minhas Publicações'),
+                        Tab(text: 'Avaliações Feitas'),
+                        Tab(text: 'Avaliações Recebidas'),
                         Tab(text: 'Arquivados'),
                       ],
                     ),
@@ -263,6 +288,8 @@ class _ProfilePageState extends State<ProfilePage>
               controller: _tabController,
               children: [
                 _buildMyPostsSection(context),
+                _buildMadeRatingsSection(context),
+                _buildReceivedRatingsSection(context),
                 _buildArchivedPostsSection(context),
               ],
             ),
@@ -361,6 +388,201 @@ class _ProfilePageState extends State<ProfilePage>
                 );
               },
             ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMadeRatingsSection(BuildContext context) {
+    return Consumer<MadeRatingsChangeNotifier>(
+      builder: (context, notifier, _) {
+        if (notifier.state == MadeRatingsState.loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (notifier.state == MadeRatingsState.error) {
+          return Center(
+            child: Text(
+              notifier.errorMessage ?? 'Erro ao carregar avaliações.',
+            ),
+          );
+        }
+        if (notifier.ratings.isEmpty) {
+          return const Center(
+            child: Text('Você ainda não fez nenhuma avaliação.'),
+          );
+        }
+
+        return AnimationLimiter(
+          child: ListView.builder(
+            controller: _madeRatingsScrollController,
+            itemCount:
+                notifier.ratings.length + (notifier.hasMorePages ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == notifier.ratings.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              final rating = notifier.ratings[index];
+              return AnimationConfiguration.staggeredList(
+                position: index,
+                duration: const Duration(milliseconds: 375),
+                child: SlideAnimation(
+                  verticalOffset: 50.0,
+                  child: FadeInAnimation(
+                    child: ResponsiveLayout(
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: InkWell(
+                          onTap: () => context.push('/users/${rating.ratedUser!.id}'),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    UserAvatar(
+                                      photoUrl: rating.ratedUser?.photoUrl,
+                                      radius: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        rating.ratedUser?.name ?? 'Usuário Anônimo',
+                                        style: Theme.of(context).textTheme.titleMedium,
+                                      ),
+                                    ),
+                                    Row(
+                                      children: List.generate(5, (i) => Icon(i < rating.rate ? Icons.star : Icons.star_border, color: Colors.amber, size: 18)),
+                                    ),
+                                  ],
+                                ),
+                                if (rating.message != null && rating.message!.isNotEmpty) ...[const Divider(height: 24), Text(rating.message!)],
+                                const SizedBox(height: 8),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Text(formatTimeAgo(rating.createdAt), style: Theme.of(context).textTheme.bodySmall),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildReceivedRatingsSection(BuildContext context) {
+    return Consumer<ReceivedRatingsChangeNotifier>(
+      builder: (context, notifier, _) {
+        if (notifier.state == ReceivedRatingsState.loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (notifier.state == ReceivedRatingsState.error) {
+          return Center(
+            child: Text(
+              notifier.errorMessage ?? 'Erro ao carregar avaliações.',
+            ),
+          );
+        }
+        if (notifier.ratings.isEmpty) {
+          return const Center(
+            child: Text('Você ainda não recebeu nenhuma avaliação.'),
+          );
+        }
+
+        return AnimationLimiter(
+          child: ListView.builder(
+            controller: _receivedRatingsScrollController,
+            itemCount:
+                notifier.ratings.length + (notifier.hasMorePages ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == notifier.ratings.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              final rating = notifier.ratings[index];
+              return AnimationConfiguration.staggeredList(
+                position: index,
+                duration: const Duration(milliseconds: 375),
+                child: SlideAnimation(
+                  verticalOffset: 50.0,
+                  child: FadeInAnimation(
+                    child: ResponsiveLayout(
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  UserAvatar(
+                                    photoUrl: rating.evaluatingUser?.photoUrl,
+                                    radius: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      rating.evaluatingUser?.name ??
+                                          'Usuário Anônimo',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
+                                  ),
+                                  Row(
+                                    children: List.generate(
+                                      5,
+                                      (i) => Icon(
+                                        i < rating.rate
+                                            ? Icons.star
+                                            : Icons.star_border,
+                                        color: Colors.amber,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (rating.message != null &&
+                                  rating.message!.isNotEmpty) ...[
+                                const Divider(height: 24),
+                                Text(rating.message!),
+                              ],
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  formatTimeAgo(rating.createdAt),
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         );
       },
     );

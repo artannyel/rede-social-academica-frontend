@@ -43,6 +43,12 @@ abstract class AuthRemoteDataSource {
     required String userId,
     required int page,
   });
+  Future<PaginatedResponse<UserRatingModel>> getReceivedRatings({
+    required int page,
+  });
+  Future<PaginatedResponse<UserRatingModel>> getMadeRatings({
+    required int page,
+  });
 }
 
 // Implementação que usa Firebase Auth e uma API REST (com Dio)
@@ -312,6 +318,42 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     final response = await dio.get(
       '/users/$userId/ratings',
+      queryParameters: {'page': page},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    return PaginatedResponse.fromJson(
+        response.data, UserRatingModel.fromJson);
+  }
+
+  @override
+  Future<PaginatedResponse<UserRatingModel>> getReceivedRatings(
+      {required int page}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para buscar avaliações.');
+    }
+
+    final response = await dio.get(
+      '/me/ratings/received',
+      queryParameters: {'page': page},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    return PaginatedResponse.fromJson(
+        response.data, UserRatingModel.fromJson);
+  }
+
+  @override
+  Future<PaginatedResponse<UserRatingModel>> getMadeRatings(
+      {required int page}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para buscar avaliações.');
+    }
+
+    final response = await dio.get(
+      '/me/ratings/made',
       queryParameters: {'page': page},
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );

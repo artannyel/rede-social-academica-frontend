@@ -94,6 +94,7 @@ class _UserProfileViewState extends State<_UserProfileView>
       text: notifier.userProfile?.currentUserRating?.message ?? '',
     );
     final formKey = GlobalKey<FormState>();
+    bool isSubmitting = false;
 
     showDialog(
       context: pageContext,
@@ -147,28 +148,34 @@ class _UserProfileViewState extends State<_UserProfileView>
                   child: const Text('Cancelar'),
                 ),
                 ElevatedButton(
-                  onPressed: rating == 0
+                  onPressed: rating == 0 || isSubmitting
                       ? null
                       : () async {
+                          setDialogState(() => isSubmitting = true);
                           final success = await notifier.submitRating(
                             rate: rating,
                             message: messageController.text,
                           );
-                          Navigator.of(dialogContext).pop();
-                          showAppSnackBar(
-                            pageContext,
-                            message: success
-                                ? 'Avaliação enviada com sucesso!'
-                                : (notifier.errorMessage ??
-                                      'Falha ao enviar avaliação.'),
-                            type: success
-                                ? SnackBarType.success
-                                : SnackBarType.error,
-                          );
-                          // Recarrega o perfil para atualizar a média e a avaliação do usuário atual
-                          if (success) notifier.fetchInitialProfile();
+                          if (dialogContext.mounted) {
+                            Navigator.of(dialogContext).pop();
+                            showAppSnackBar(
+                              pageContext,
+                              message: success
+                                  ? 'Avaliação enviada com sucesso!'
+                                  : (notifier.errorMessage ??
+                                        'Falha ao enviar avaliação.'),
+                              type: success
+                                  ? SnackBarType.success
+                                  : SnackBarType.error,
+                            );
+                            // Recarrega o perfil para atualizar a média e a avaliação do usuário atual
+                            if (success) notifier.fetchInitialProfile();
+                          }
                         },
-                  child: const Text('Enviar'),
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('Enviar'),
                 ),
               ],
             );
