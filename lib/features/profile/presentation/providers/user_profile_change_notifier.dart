@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:social_academic/features/authentication/domain/entities/user.dart';
+import 'package:social_academic/features/authentication/domain/entities/user_profile.dart';
 import 'package:social_academic/features/authentication/domain/usecases/get_user_profile.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
+import 'package:social_academic/features/authentication/domain/usecases/rate_user.dart';
 import 'package:social_academic/features/posts/domain/usecases/like_post.dart';
 
 enum UserProfileState {
@@ -15,11 +17,13 @@ enum UserProfileState {
 class UserProfileChangeNotifier extends ChangeNotifier {
   final GetUserProfile _getUserProfileUseCase;
   final LikePost _likePostUseCase;
+  final RateUser _rateUserUseCase;
   final String userId;
 
   UserProfileChangeNotifier(
     this._getUserProfileUseCase,
     this._likePostUseCase,
+    this._rateUserUseCase,
     this.userId,
   );
 
@@ -31,6 +35,9 @@ class UserProfileChangeNotifier extends ChangeNotifier {
 
   User? _user;
   User? get user => _user;
+
+  UserProfile? _userProfile;
+  UserProfile? get userProfile => _userProfile;
 
   List<Post> _posts = [];
   List<Post> get posts => _posts;
@@ -57,6 +64,7 @@ class UserProfileChangeNotifier extends ChangeNotifier {
         _posts = [];
       },
       (userProfile) {
+        _userProfile = userProfile;
         _user = userProfile.user;
         _posts = userProfile.posts.data;
         _hasMorePages = userProfile.posts.hasMorePages;
@@ -82,6 +90,7 @@ class UserProfileChangeNotifier extends ChangeNotifier {
         _currentPage--;
       },
       (userProfile) {
+        _userProfile = userProfile;
         _posts.addAll(userProfile.posts.data);
         _hasMorePages = userProfile.posts.hasMorePages;
         _state = UserProfileState.success;
@@ -111,5 +120,24 @@ class UserProfileChangeNotifier extends ChangeNotifier {
       _errorMessage = failure.message;
       notifyListeners();
     }, (_) => _errorMessage = null);
+  }
+
+  Future<bool> submitRating({
+    required int rate,
+    required String message,
+  }) async {
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await _rateUserUseCase(
+      userId: userId,
+      rate: rate,
+      message: message,
+    );
+
+    return result.fold((failure) {
+      _errorMessage = failure.message;
+      return false;
+    }, (_) => true);
   }
 }

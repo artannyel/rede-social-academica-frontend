@@ -1,5 +1,6 @@
 import 'package:social_academic/app/core/data/models/paginated_response.dart';
 import 'package:social_academic/features/authentication/data/models/user_model.dart';
+import 'package:social_academic/features/authentication/data/models/user_rating_model.dart';
 import 'package:social_academic/features/authentication/domain/entities/user_profile.dart';
 import 'package:social_academic/features/posts/data/models/post_model.dart';
 
@@ -7,9 +8,11 @@ class UserProfileModel {
   UserProfileModel({
     required this.user,
     required this.posts,
+    this.currentUserRating,
   });
   final UserModel user;
   final PaginatedResponse<PostModel> posts;
+  final UserRatingModel? currentUserRating;
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
     return UserProfileModel(
@@ -18,6 +21,9 @@ class UserProfileModel {
         json['posts'],
         PostModel.fromJson,
       ),
+      currentUserRating: json['current_user_rating'] != null
+          ? UserRatingModel.fromJson(json['current_user_rating'])
+          : null,
     );
   }
 
@@ -25,6 +31,7 @@ class UserProfileModel {
     return UserProfile(
       user: user, // UserModel é um subtipo de User, então a atribuição é válida.
       posts: posts.toEntity(),
+      currentUserRating: currentUserRating?.toEntity(),
     );
   }
 }

@@ -10,7 +10,9 @@ class UserModel extends User {
     required super.firebaseUid,
     super.photoUrl,
     List<CourseModel>? super.courses,
-    super.bio,    
+    super.bio,
+    super.receivedRatingsAvgRate,
+    super.receivedRatingsCount,
   });
 
   /// Construtor para criar um usuário anônimo/inválido.
@@ -21,10 +23,18 @@ class UserModel extends User {
           name: 'Usuário Removido',
           email: '',
           firebaseUid: '',
+          receivedRatingsAvgRate: null,
+          receivedRatingsCount: null,
         );
 
   // Converte um mapa (JSON) em um UserModel.
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    double? parseAvgRate(dynamic value) {
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value);
+      return null;
+    }
+
     final coursesData = json['courses'] as List<dynamic>?;
     return UserModel(
       id: json['id'] as String? ?? '',
@@ -37,6 +47,9 @@ class UserModel extends User {
       courses: coursesData
           ?.map((courseJson) => CourseModel.fromJson(courseJson))
           .toList(),
+      receivedRatingsAvgRate: parseAvgRate(json['received_ratings_avg_rate']),
+      receivedRatingsCount:
+          json['received_ratings_count'] as int?,
     );
   }
 
@@ -53,6 +66,8 @@ class UserModel extends User {
       'courses': (courses as List<CourseModel>?)
           ?.map((course) => course.toJson())
           .toList(),
+      'received_ratings_avg_rate': receivedRatingsAvgRate,
+      'received_ratings_count': receivedRatingsCount,
     };
   }
 }

@@ -20,6 +20,8 @@ import 'package:social_academic/features/authentication/domain/repositories/auth
 import 'package:social_academic/features/authentication/domain/usecases/login.dart';
 import 'package:social_academic/features/authentication/domain/usecases/register.dart';
 import 'package:social_academic/features/authentication/domain/usecases/send_password_reset_email.dart';
+import 'package:social_academic/features/authentication/domain/usecases/get_user_ratings.dart';
+import 'package:social_academic/features/authentication/domain/usecases/rate_user.dart';
 import 'package:social_academic/features/authentication/domain/usecases/get_current_user.dart';
 import 'package:social_academic/features/authentication/domain/usecases/update_user.dart';
 import 'package:social_academic/features/authentication/presentation/provider/login_change_notifier.dart';
@@ -195,6 +197,12 @@ class MyApp extends StatelessWidget {
         ),
         Provider<GetUserProfile>(
           create: (context) => GetUserProfile(context.read<AuthRepository>()),
+        ),
+        Provider<RateUser>(
+          create: (context) => RateUser(context.read<AuthRepository>()),
+        ),
+        Provider<GetUserRatings>(
+          create: (context) => GetUserRatings(context.read<AuthRepository>()),
         ),
 
         // Camada de Apresentação (Presentation) - Notifiers de Estado Global

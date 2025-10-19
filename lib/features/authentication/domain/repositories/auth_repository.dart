@@ -1,7 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:social_academic/app/core/domain/entities/paginated_response.dart';
 import 'package:social_academic/app/core/error/failure.dart';
 import 'package:social_academic/features/authentication/domain/entities/user.dart';
+import 'package:social_academic/features/authentication/domain/entities/user_rating.dart';
 import 'package:social_academic/features/authentication/domain/entities/user_profile.dart';
 
 abstract class AuthRepository {
@@ -30,6 +32,17 @@ abstract class AuthRepository {
   Future<Either<Failure, void>> sendPasswordResetEmail({required String email});
   Future<Either<Failure, User>> getCurrentUser();
   Future<Either<Failure, UserProfile>> getUserProfile({
+    required String userId,
+    required int page,
+  });
+
+  Future<Either<Failure, void>> rateUser({
+    required String userId,
+    required int rate,
+    required String message,
+  });
+
+  Future<Either<Failure, PaginatedResponse<UserRating>>> getUserRatings({
     required String userId,
     required int page,
   });

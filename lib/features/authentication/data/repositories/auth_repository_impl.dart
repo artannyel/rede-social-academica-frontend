@@ -2,7 +2,9 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:image_picker/image_picker.dart';
+import 'package:social_academic/app/core/domain/entities/paginated_response.dart';
 import 'package:social_academic/app/core/error/failure.dart';
+import 'package:social_academic/features/authentication/domain/entities/user_rating.dart';
 import 'package:social_academic/features/authentication/domain/entities/user_profile.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -185,6 +187,55 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(
         ServerFailure(
           'Ocorreu um erro inesperado ao buscar o perfil: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> rateUser(
+      {required String userId,
+      required int rate,
+      required String message}) async {
+    try {
+      await remoteDataSource.rateUser(
+        userId: userId,
+        rate: rate,
+        message: message,
+      );
+      return const Right(null);
+    } on DioException catch (e) {
+      String errorMessage = 'Não foi possível enviar a avaliação.';
+      if (e.response?.data is Map<String, dynamic>) {
+        errorMessage = e.response!.data['message'] ?? errorMessage;
+      }
+      return Left(ServerFailure(errorMessage));
+    } on Exception catch (e) {
+      return Left(
+        ServerFailure(e.toString().replaceFirst('Exception: ', '')),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResponse<UserRating>>> getUserRatings(
+      {required String userId, required int page}) async {
+    try {
+      final paginatedRatingsModel = await remoteDataSource.getUserRatings(userId: userId, page: page);
+      return Right(paginatedRatingsModel.toEntity<UserRating>());
+    } on DioException {
+      return const Left(
+        ServerFailure(
+          'Não foi possível carregar as avaliações. Verifique sua conexão.',
+        ),
+      );
+    } on Exception catch (e) {
+      return Left(
+        ServerFailure(
+          e.toString().replaceFirst(
+                'Exception: ',
+                '',
+              ),
         ),
       );
     }

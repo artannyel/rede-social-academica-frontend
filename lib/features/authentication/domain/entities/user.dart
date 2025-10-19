@@ -9,6 +9,8 @@ class User {
   final List<Course>? courses;
   final String? photoUrl;
   final String? bio;
+  final double? receivedRatingsAvgRate;
+  final int? receivedRatingsCount;
 
   const User({
     required this.id,
@@ -18,5 +20,7 @@ class User {
     this.photoUrl,
     this.courses,
     this.bio,
+    this.receivedRatingsAvgRate,
+    this.receivedRatingsCount,
   });
 }

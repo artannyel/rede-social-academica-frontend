@@ -155,6 +155,30 @@ class _ProfilePageState extends State<ProfilePage>
     }
   }
 
+  Widget _buildRatingDisplay(BuildContext context, double? avgRate, int? count) {
+    // Não mostra nada se não houver avaliações
+    if (avgRate == null || count == null || count == 0) {
+      return const SizedBox.shrink();
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.star, color: Colors.amber, size: 20),
+        const SizedBox(width: 4),
+        Text(
+          avgRate.toStringAsFixed(1), // Formata para uma casa decimal
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '($count ${count == 1 ? "avaliação" : "avaliações"})',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -209,6 +233,8 @@ class _ProfilePageState extends State<ProfilePage>
                               style: Theme.of(context).textTheme.bodyLarge,
                               textAlign: TextAlign.center,
                             ),
+                          const SizedBox(height: 16),
+                          _buildRatingDisplay(context, user.receivedRatingsAvgRate, user.receivedRatingsCount),
                           const SizedBox(height: 24),
                           const Divider(),
                           const SizedBox(height: 16),

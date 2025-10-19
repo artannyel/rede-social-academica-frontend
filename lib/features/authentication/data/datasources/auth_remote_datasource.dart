@@ -2,9 +2,11 @@ import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:social_academic/app/core/data/models/paginated_response.dart';
 import 'package:social_academic/features/authentication/data/models/user_profile_model.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import 'package:social_academic/features/authentication/data/models/user_rating_model.dart';
 import '../models/user_model.dart';
 import 'package:social_academic/app/core/utils/image_converter.dart';
 
@@ -29,6 +31,15 @@ abstract class AuthRemoteDataSource {
   });
   Future<UserModel> getCurrentUser();
   Future<UserProfileModel> getUserProfile({
+    required String userId,
+    required int page,
+  });
+  Future<void> rateUser({
+    required String userId,
+    required int rate,
+    required String message,
+  });
+  Future<PaginatedResponse<UserRatingModel>> getUserRatings({
     required String userId,
     required int page,
   });
@@ -269,5 +280,43 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return UserProfileModel.fromJson(response.data);
+  }
+
+  @override
+  Future<void> rateUser(
+      {required String userId,
+      required int rate,
+      required String message}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para avaliar.');
+    }
+
+    await dio.post(
+      '/users/$userId/rate',
+      data: {
+        'rate': rate,
+        'message': message,
+      },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  @override
+  Future<PaginatedResponse<UserRatingModel>> getUserRatings(
+      {required String userId, required int page}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para buscar avaliações.');
+    }
+
+    final response = await dio.get(
+      '/users/$userId/ratings',
+      queryParameters: {'page': page},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    return PaginatedResponse.fromJson(
+        response.data, UserRatingModel.fromJson);
   }
 }
