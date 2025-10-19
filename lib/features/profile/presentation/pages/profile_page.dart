@@ -317,7 +317,7 @@ class _ProfilePageState extends State<ProfilePage>
               trailing: Text(status),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
