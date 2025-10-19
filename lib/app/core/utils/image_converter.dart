@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:heckofaheic/heckofaheic.dart';
 import 'package:path/path.dart' as p;
 
 /// Processa uma imagem [XFile]. Se for um arquivo HEIC/HEIF, converte para JPEG.
@@ -28,10 +27,6 @@ Future<Map<String, dynamic>> processAndConvertImage(XFile imageFile) async {
     imageBytes = result;
     // Altera o nome do arquivo para refletir a nova extensão
     imageName = '${p.basenameWithoutExtension(imageName)}.jpg';
-  } else if (kIsWeb) {
-    if (HeckOfAHeic.isHEIC(imageBytes)) {
-      imageBytes = await HeckOfAHeic.convert(imageBytes);
-    }
   }
 
   return {'bytes': imageBytes, 'name': imageName};

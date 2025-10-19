@@ -48,7 +48,6 @@ dependencies:
   shimmer: ^3.0.0
   mime: ^1.0.5
   flutter_image_compress: ^2.3.0
-  heckofaheic: ^0.0.7
 
 dev_dependencies:
   flutter_test:
