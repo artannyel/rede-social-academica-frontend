@@ -1,4 +1,5 @@
 import 'package:social_academic/features/courses/data/models/course_model.dart';
+import 'package:social_academic/features/authentication/data/models/user_model.dart';
 import 'package:social_academic/features/mini_courses/domain/entities/mini_course.dart';
 
 class MiniCourseModel extends MiniCourse {
@@ -8,6 +9,7 @@ class MiniCourseModel extends MiniCourse {
     required super.description,
     super.photoUrl,
     super.courses,
+    super.user,
   });
 
   factory MiniCourseModel.fromJson(Map<String, dynamic> json) {
@@ -19,6 +21,7 @@ class MiniCourseModel extends MiniCourse {
       courses: json['courses'] != null
           ? (json['courses'] as List).map((e) => CourseModel.fromJson(e)).toList()
           : null,
+      user: json['user'] != null ? UserModel.fromJson(json['user']) : null,
     );
   }
 
@@ -28,5 +31,6 @@ class MiniCourseModel extends MiniCourse {
         'description': description,
         'photo_url': photoUrl,
         'courses': courses?.map((e) => (e as CourseModel).toJson()).toList(),
+        'user': user != null ? (user as UserModel).toJson() : null,
       };
 }

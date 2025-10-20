@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:social_academic/features/mini_courses/domain/entities/mini_course.dart';
+import 'package:social_academic/shared/widgets/user_avatar.dart';
 import 'package:social_academic/shared/widgets/responsive_layout.dart';
 
 class MiniCourseCard extends StatelessWidget {
@@ -38,11 +39,16 @@ class MiniCourseCard extends StatelessWidget {
                     miniCourse.title,
                     style: textTheme.headlineSmall,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    miniCourse.description,
-                    style: textTheme.bodyMedium,
-                  ),
+                  if (miniCourse.user != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        UserAvatar(photoUrl: miniCourse.user!.photoUrl, radius: 16),
+                        const SizedBox(width: 8),
+                        Text(miniCourse.user!.name, style: textTheme.bodyLarge),
+                      ],
+                    ),
+                  ]
                 ],
               ),
             ),

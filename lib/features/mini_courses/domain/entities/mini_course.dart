@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:social_academic/features/authentication/domain/entities/user.dart';
 import 'package:social_academic/features/courses/domain/entities/course.dart';
 
 class MiniCourse extends Equatable {
@@ -7,6 +8,7 @@ class MiniCourse extends Equatable {
   final String description;
   final String? photoUrl;
   final List<Course>? courses;
+  final User? user;
 
   const MiniCourse({
     required this.id,
@@ -14,8 +16,9 @@ class MiniCourse extends Equatable {
     required this.description,
     this.photoUrl,
     this.courses,
+    this.user,
   });
 
   @override
-  List<Object?> get props => [id, title, description, photoUrl, courses];
+  List<Object?> get props => [id, title, description, photoUrl, courses, user];
 }
