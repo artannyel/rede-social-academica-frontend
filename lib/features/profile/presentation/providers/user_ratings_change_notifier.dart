@@ -31,8 +31,9 @@ class UserRatingsChangeNotifier extends ChangeNotifier {
     _hasMorePages = true;
     notifyListeners();
 
-    final result =
-        await _getUserRatingsUseCase(userId: userId, page: _currentPage);
+    final result = await _getUserRatingsUseCase(
+      GetUserRatingsParams(userId: userId, page: _currentPage),
+    );
 
     result.fold(
       (failure) {
@@ -56,8 +57,9 @@ class UserRatingsChangeNotifier extends ChangeNotifier {
     notifyListeners();
 
     _currentPage++;
-    final result =
-        await _getUserRatingsUseCase(userId: userId, page: _currentPage);
+    final result = await _getUserRatingsUseCase(
+      GetUserRatingsParams(userId: userId, page: _currentPage),
+    );
 
     result.fold(
       (failure) {

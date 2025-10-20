@@ -6,13 +6,7 @@ import 'package:social_academic/features/posts/domain/entities/post.dart';
 import 'package:social_academic/features/authentication/domain/usecases/rate_user.dart';
 import 'package:social_academic/features/posts/domain/usecases/like_post.dart';
 
-enum UserProfileState {
-  idle,
-  loading,
-  loadingMore,
-  success,
-  error,
-}
+enum UserProfileState { idle, loading, loadingMore, success, error }
 
 class UserProfileChangeNotifier extends ChangeNotifier {
   final GetUserProfile _getUserProfileUseCase;
@@ -54,7 +48,9 @@ class UserProfileChangeNotifier extends ChangeNotifier {
     _hasMorePages = true;
     notifyListeners();
 
-    final result = await _getUserProfileUseCase(userId: userId, page: _currentPage);
+    final result = await _getUserProfileUseCase(
+      GetUserProfileParams(userId: userId, page: _currentPage),
+    );
 
     result.fold(
       (failure) {
@@ -81,7 +77,9 @@ class UserProfileChangeNotifier extends ChangeNotifier {
     notifyListeners();
 
     _currentPage++;
-    final result = await _getUserProfileUseCase(userId: userId, page: _currentPage);
+    final result = await _getUserProfileUseCase(
+      GetUserProfileParams(userId: userId, page: _currentPage),
+    );
 
     result.fold(
       (failure) {
@@ -109,10 +107,12 @@ class UserProfileChangeNotifier extends ChangeNotifier {
 
     final postToUpdate = _posts[postIndex];
     postToUpdate.isLiked = !postToUpdate.isLiked;
-    postToUpdate.likesCount = postToUpdate.isLiked ? postToUpdate.likesCount + 1 : postToUpdate.likesCount - 1;
+    postToUpdate.likesCount = postToUpdate.isLiked
+        ? postToUpdate.likesCount + 1
+        : postToUpdate.likesCount - 1;
     notifyListeners();
 
-    final result = await _likePostUseCase(postId: postId);
+    final result = await _likePostUseCase(postId);
 
     result.fold((failure) {
       postToUpdate.isLiked = originalIsLiked;
@@ -130,9 +130,7 @@ class UserProfileChangeNotifier extends ChangeNotifier {
     notifyListeners();
 
     final result = await _rateUserUseCase(
-      userId: userId,
-      rate: rate,
-      message: message,
+      RateUserParams(userId: userId, rate: rate, message: message),
     );
 
     return result.fold((failure) {

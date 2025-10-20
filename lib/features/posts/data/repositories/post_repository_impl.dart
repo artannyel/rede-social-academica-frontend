@@ -162,9 +162,13 @@ class PostRepositoryImpl implements PostRepository {
       final paginatedModel = await remoteDataSource.getPosts(page: page);
       // Converte o PaginatedResponse<PostModel> para PaginatedResponse<Post> (entidade)
       return Right(paginatedModel.toEntity<Post>());
-    } on DioException catch (e) {
+    } on DioException catch (e, stackTrace) {
       // Adiciona um log para facilitar a depuração de erros da API.
-      log('DioException in getPosts: ${e.response?.data}');
+      log(
+        'DioException in getPosts: type=${e.type}, message=${e.message}',
+        error: e,
+        stackTrace: stackTrace,
+      );
       String errorMessage =
           'Não foi possível buscar as publicações. Verifique sua conexão.';
       if (e.response?.data is Map<String, dynamic>) {

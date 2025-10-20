@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_academic/app/core/usecases/usecase.dart';
 import 'package:social_academic/features/courses/domain/entities/course.dart';
 import 'package:social_academic/features/courses/domain/usecases/get_courses.dart';
 
@@ -22,7 +23,7 @@ class CourseChangeNotifier extends ChangeNotifier {
     _state = CourseState.loading;
     notifyListeners();
 
-    final result = await _getCoursesUseCase();
+    final result = await _getCoursesUseCase(NoParams());
 
     result.fold(
       (failure) {

@@ -17,9 +17,9 @@ class CommentChangeNotifier extends ChangeNotifier {
     required GetComments getComments,
     required CreateComment createComment,
     required LikeComment likeComment,
-  })  : _getComments = getComments,
-        _createComment = createComment,
-        _likeComment = likeComment {
+  }) : _getComments = getComments,
+       _createComment = createComment,
+       _likeComment = likeComment {
     fetchInitialComments();
   }
 
@@ -42,7 +42,9 @@ class CommentChangeNotifier extends ChangeNotifier {
     _hasMorePages = true;
     notifyListeners();
 
-    final result = await _getComments(postId: postId, page: _currentPage);
+    final result = await _getComments(
+      GetCommentsParams(postId: postId, page: _currentPage),
+    );
 
     result.fold(
       (failure) {
@@ -66,7 +68,9 @@ class CommentChangeNotifier extends ChangeNotifier {
     notifyListeners();
 
     _currentPage++;
-    final result = await _getComments(postId: postId, page: _currentPage);
+    final result = await _getComments(
+      GetCommentsParams(postId: postId, page: _currentPage),
+    );
 
     result.fold(
       (failure) {
@@ -92,9 +96,11 @@ class CommentChangeNotifier extends ChangeNotifier {
     notifyListeners();
 
     final result = await _createComment(
-      postId: postId,
-      comment: comment,
-      parentCommentId: parentCommentId,
+      CreateCommentParams(
+        postId: postId,
+        comment: comment,
+        parentCommentId: parentCommentId,
+      ),
     );
 
     return result.fold(
@@ -136,15 +142,19 @@ class CommentChangeNotifier extends ChangeNotifier {
 
     // Atualização Otimista
     targetComment.isLiked = !targetComment.isLiked;
-    targetComment.isLiked ? targetComment.likesCount++ : targetComment.likesCount--;
+    targetComment.isLiked
+        ? targetComment.likesCount++
+        : targetComment.likesCount--;
     notifyListeners();
 
-    final result = await _likeComment(commentId: commentId);
+    final result = await _likeComment(commentId);
 
     // Reverte em caso de erro
     result.fold((failure) {
       targetComment.isLiked = !targetComment.isLiked;
-      targetComment.isLiked ? targetComment.likesCount++ : targetComment.likesCount--;
+      targetComment.isLiked
+          ? targetComment.likesCount++
+          : targetComment.likesCount--;
       _errorMessage = failure.message;
       _state = CommentState.error; // ou um estado de erro específico para like
       notifyListeners();

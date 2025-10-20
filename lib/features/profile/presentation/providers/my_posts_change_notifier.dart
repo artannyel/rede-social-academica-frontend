@@ -11,7 +11,11 @@ class MyPostsChangeNotifier extends ChangeNotifier {
   final LikePost _likePostUseCase;
   final DeletePost _deletePostUseCase;
 
-  MyPostsChangeNotifier(this._getMyPostsUseCase, this._likePostUseCase, this._deletePostUseCase);
+  MyPostsChangeNotifier(
+    this._getMyPostsUseCase,
+    this._likePostUseCase,
+    this._deletePostUseCase,
+  );
 
   MyPostsListState _state = MyPostsListState.idle;
   MyPostsListState get state => _state;
@@ -96,7 +100,7 @@ class MyPostsChangeNotifier extends ChangeNotifier {
         : postToUpdate.likesCount - 1;
     notifyListeners();
 
-    final result = await _likePostUseCase(postId: postId);
+    final result = await _likePostUseCase(postId);
 
     result.fold((failure) {
       postToUpdate.isLiked = originalIsLiked;

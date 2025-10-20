@@ -6,7 +6,7 @@ import 'package:social_academic/features/posts/domain/usecases/like_post.dart';
 enum PostListState {
   idle,
   loadingInitial, // Para a primeira busca
-  loadingMore,    // Para a paginação
+  loadingMore, // Para a paginação
   success,
   error,
 }
@@ -41,7 +41,7 @@ class PostChangeNotifier extends ChangeNotifier {
     _hasMorePages = true;
     notifyListeners();
 
-    final result = await _getPostsUseCase(page: _currentPage);
+    final result = await _getPostsUseCase(_currentPage);
 
     result.fold(
       (failure) {
@@ -67,7 +67,7 @@ class PostChangeNotifier extends ChangeNotifier {
     notifyListeners();
 
     _currentPage++;
-    final result = await _getPostsUseCase(page: _currentPage);
+    final result = await _getPostsUseCase(_currentPage);
 
     result.fold(
       (failure) {
@@ -79,8 +79,12 @@ class PostChangeNotifier extends ChangeNotifier {
         // Filtra posts duplicados antes de adicionar à lista.
         // Isso evita que posts que já foram carregados (e que podem ter "descido"
         // para páginas posteriores devido a novos posts no topo) sejam adicionados novamente.
-        final newPosts = paginatedResponse.data.where((newPost) =>
-            !_posts.any((existingPost) => existingPost.id == newPost.id)).toList();
+        final newPosts = paginatedResponse.data
+            .where(
+              (newPost) =>
+                  !_posts.any((existingPost) => existingPost.id == newPost.id),
+            )
+            .toList();
         _posts.addAll(newPosts);
         _hasMorePages = paginatedResponse.hasMorePages;
         _state = PostListState.success;
@@ -108,7 +112,7 @@ class PostChangeNotifier extends ChangeNotifier {
     notifyListeners();
 
     // Chama a API.
-    final result = await _likePostUseCase(postId: postId);
+    final result = await _likePostUseCase(postId);
 
     // Se a API falhar, reverte a alteração na UI.
     result.fold(

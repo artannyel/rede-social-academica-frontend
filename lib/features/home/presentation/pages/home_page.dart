@@ -2,13 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:social_academic/features/mini_courses/domain/entities/mini_course.dart';
+import 'package:social_academic/features/mini_courses/presentation/providers/mini_course_list_change_notifier.dart';
 import 'package:social_academic/app/core/theme/theme_notifier.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
-import 'package:social_academic/features/posts/presentation/providers/post_change_notifier.dart';
-import 'package:social_academic/features/posts/presentation/widgets/post_card.dart';
-import 'package:social_academic/features/posts/presentation/widgets/post_card_skeleton.dart';
-import 'package:social_academic/shared/widgets/responsive_layout.dart';
+import 'package:social_academic/features/mini_courses/presentation/pages/mini_course_list_page.dart';
+import 'package:social_academic/features/posts/presentation/pages/post_list_page.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
 
 class HomePage extends StatefulWidget {
@@ -19,34 +18,50 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final _scrollController = ScrollController();
+  int _selectedIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PostChangeNotifier>().fetchInitialPosts();
+  // Títulos para a AppBar
+  static const List<String> _appBarTitles = <String>[
+    'Feed de Publicações',
+    'Mini Cursos',
+  ];
+
+  // Telas que serão exibidas
+  static const List<Widget> _widgetOptions = <Widget>[
+    PostListPage(),
+    MiniCourseListPage(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
     });
-
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 200) {
-        context.read<PostChangeNotifier>().fetchMorePosts();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Lista de FloatingActionButtons que agora são construídos aqui para ter acesso ao `context`.
+    final List<Widget?> floatingActionButtons = [
+      FloatingActionButton(
+        onPressed: () => context.push('/posts/create'),
+        tooltip: 'Nova Publicação',
+        child: const Icon(Icons.add),
+      ),
+      FloatingActionButton(
+        onPressed: () async {
+          final newMiniCourse = await context.push<MiniCourse>('/mini-courses/create');
+          if (newMiniCourse != null && context.mounted) {
+            context.read<MiniCourseListChangeNotifier>().addNewMiniCourse(newMiniCourse);
+          }
+        },
+        tooltip: 'Novo Mini Curso',
+        child: const Icon(Icons.school_outlined),
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: Text(_appBarTitles[_selectedIndex]),
         actions: [
           Consumer<UserNotifier>(
             builder: (context, userNotifier, _) {
@@ -77,82 +92,25 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: Consumer<PostChangeNotifier>(
-        builder: (context, notifier, child) {
-          if (notifier.state == PostListState.loadingInitial) {
-            return ListView.builder(
-              itemCount: 5, // Mostra 5 skeletons enquanto carrega
-              itemBuilder: (context, index) => const PostCardSkeleton(),
-            );
-          }
-
-          if (notifier.state == PostListState.error && notifier.posts.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(notifier.errorMessage ?? 'Ocorreu um erro.'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => notifier.fetchInitialPosts(),
-                    child: const Text('Tentar Novamente'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (notifier.posts.isEmpty) {
-            return const Center(
-              child: Text('Nenhuma publicação encontrada.'),
-            );
-          }
-
-          return RefreshIndicator(
-            onRefresh: () => notifier.fetchInitialPosts(),
-            child: AnimationLimiter(
-              child: ListView.builder(
-                controller: _scrollController,
-                itemCount: notifier.posts.length +
-                    (notifier.hasMorePages
-                        ? 1
-                        : 0),
-                itemBuilder: (context, index) {
-                  if (index == notifier.posts.length) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  final post = notifier.posts[index];
-                  return AnimationConfiguration.staggeredList(
-                    position: index,
-                    duration: const Duration(milliseconds: 375),
-                    child: SlideAnimation(
-                      verticalOffset: 50.0,
-                      child: FadeInAnimation(
-                        child: ResponsiveLayout(
-                          child: PostCard(
-                            post: post,
-                            onLike: () => notifier.toggleLike(post.id),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
-        },
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _widgetOptions,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.push('/posts/create');
-        },
-        tooltip: 'Nova Publicação',
-        child: const Icon(Icons.add),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.article_outlined),
+            label: 'Posts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school_outlined),
+            label: 'Mini Cursos',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
+      floatingActionButton: floatingActionButtons[_selectedIndex],
     );
   }
 }

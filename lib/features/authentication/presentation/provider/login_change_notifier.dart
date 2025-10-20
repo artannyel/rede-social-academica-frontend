@@ -26,27 +26,27 @@ class LoginChangeNotifier extends ChangeNotifier {
   User? _user;
   User? get user => _user;
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     _state = LoginState.loading;
     _errorMessage = null;
     notifyListeners();
 
     final result = await _loginUseCase(
-      email: email,
-      password: password,
+      LoginParams(email: email, password: password),
     );
 
     result.fold(
-      (failure) { // Lado Esquerdo (Erro)
+      (failure) {
+        // Lado Esquerdo (Erro)
         _errorMessage = failure.message;
         _state = LoginState.error;
       },
-      (user) { // Lado Direito (Sucesso)
+      (user) {
+        // Lado Direito (Sucesso)
         _user = user;
-        _userNotifier.setAppUser(user); // Atualiza o UserNotifier com o usuário completo
+        _userNotifier.setAppUser(
+          user,
+        ); // Atualiza o UserNotifier com o usuário completo
         _state = LoginState.success;
       },
     );
@@ -67,7 +67,7 @@ class LoginChangeNotifier extends ChangeNotifier {
 
   /// Envia um e-mail de redefinição de senha e retorna uma mensagem de sucesso ou erro.
   Future<String> sendPasswordResetEmail(String email) async {
-    final result = await _sendPasswordResetEmailUseCase(email: email);
+    final result = await _sendPasswordResetEmailUseCase(email);
     return result.fold(
       (failure) => failure.message,
       (_) => 'E-mail de redefinição de senha enviado com sucesso!',

@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:social_academic/features/mini_courses/presentation/providers/mini_course_list_change_notifier.dart';
 import 'package:social_academic/features/posts/domain/usecases/edit_post.dart';
 import 'package:social_academic/features/posts/domain/usecases/like_comment.dart';
 import 'package:url_strategy/url_strategy.dart';
@@ -50,6 +51,11 @@ import 'package:social_academic/features/posts/domain/repositories/tag_repositor
 import 'package:social_academic/features/posts/domain/usecases/get_tags.dart';
 import 'package:social_academic/features/posts/domain/usecases/get_archived_posts.dart';
 import 'package:social_academic/firebase_options.dart';
+import 'package:social_academic/features/mini_courses/data/datasources/mini_course_remote_datasource.dart';
+import 'package:social_academic/features/mini_courses/data/repositories/mini_course_repository_impl.dart';
+import 'package:social_academic/features/mini_courses/domain/repositories/mini_course_repository.dart';
+import 'package:social_academic/features/mini_courses/domain/usecases/create_mini_course.dart';
+import 'package:social_academic/features/mini_courses/domain/usecases/get_mini_courses.dart';
 
 late final FirebaseApp app;
 late final FirebaseAuth auth;
@@ -135,6 +141,12 @@ class MyApp extends StatelessWidget {
             remoteDataSource: context.read<TagRemoteDataSource>(),
           ),
         ),
+        Provider<MiniCourseRemoteDataSource>(
+          create: (context) => MiniCourseRemoteDataSourceImpl(
+            dio: context.read<Dio>(),
+            firebaseAuth: context.read<FirebaseAuth>(),
+          ),
+        ),
 
         // Camada de Domínio (Domain)
         Provider<Register>(
@@ -202,6 +214,15 @@ class MyApp extends StatelessWidget {
         Provider<GetUserRatings>(
           create: (context) => GetUserRatings(context.read<AuthRepository>()),
         ),
+        Provider<MiniCourseRepository>(
+          create: (context) => MiniCourseRepositoryImpl(
+            remoteDataSource: context.read<MiniCourseRemoteDataSource>(),
+          ),
+        ),
+        Provider<CreateMiniCourse>(
+            create: (context) => CreateMiniCourse(context.read<MiniCourseRepository>())),
+        Provider<GetMiniCourses>(
+            create: (context) => GetMiniCourses(context.read<MiniCourseRepository>())),
 
         // Camada de Apresentação (Presentation) - Notifiers de Estado Global
         ChangeNotifierProvider<UserNotifier>(
@@ -242,6 +263,9 @@ class MyApp extends StatelessWidget {
             context.read<UpdateUser>(),
             context.read<UserNotifier>(),
           ),
+        ),
+        ChangeNotifierProvider<MiniCourseListChangeNotifier>(
+          create: (context) => MiniCourseListChangeNotifier(context.read<GetMiniCourses>()),
         ),
       ],
       // Usamos um Consumer para obter um `context` que está abaixo do MultiProvider

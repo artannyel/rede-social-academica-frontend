@@ -6,6 +6,7 @@ import 'package:social_academic/features/authentication/presentation/pages/email
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/home/presentation/pages/home_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/create_post_page.dart';
+import 'package:social_academic/features/mini_courses/presentation/pages/create_mini_course_page.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
 import 'package:social_academic/features/posts/presentation/pages/edit_post_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/post_comments_page.dart';
@@ -94,6 +95,26 @@ GoRouter appRouter(AuthNotifier authNotifier) {
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               // Animação de slide de baixo para cima
+              const begin = Offset(0.0, 1.0);
+              const end = Offset.zero;
+              final tween = Tween(begin: begin, end: end)
+                  .chain(CurveTween(curve: Curves.easeInOut));
+              return SlideTransition(
+                  position: animation.drive(tween), child: child);
+            },
+          );
+        },
+      ),
+      GoRoute(
+        path: '/mini-courses/create',
+        name: 'create-mini-course',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const CreateMiniCoursePage(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              // Animação de slide de baixo para cima, igual à de criar post
               const begin = Offset(0.0, 1.0);
               const end = Offset.zero;
               final tween = Tween(begin: begin, end: end)
