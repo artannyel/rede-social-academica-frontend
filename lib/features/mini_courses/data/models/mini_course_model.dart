@@ -10,6 +10,8 @@ class MiniCourseModel extends MiniCourse {
     super.photoUrl,
     super.courses,
     super.user,
+    super.isEnrolled,
+    super.isPublished,
   });
 
   factory MiniCourseModel.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,8 @@ class MiniCourseModel extends MiniCourse {
           ? (json['courses'] as List).map((e) => CourseModel.fromJson(e)).toList()
           : null,
       user: json['user'] != null ? UserModel.fromJson(json['user']) : null,
+      isEnrolled: json['is_enrolled'] ?? false,
+      isPublished: json['published'] ?? false,
     );
   }
 
@@ -32,6 +36,8 @@ class MiniCourseModel extends MiniCourse {
         'photo_url': photoUrl,
         'courses': courses?.map((e) => (e as CourseModel).toJson()).toList(),
         'user': user != null ? (user as UserModel).toJson() : null,
+        'is_enrolled': isEnrolled,
+        'published': isPublished,
       };
 
   MiniCourse toEntity() {
@@ -42,6 +48,8 @@ class MiniCourseModel extends MiniCourse {
       photoUrl: photoUrl,
       courses: courses,
       user: user,
+      isEnrolled: isEnrolled,
+      isPublished: isPublished,
     );
   }
 }

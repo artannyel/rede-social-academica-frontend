@@ -5,6 +5,7 @@ import 'package:social_academic/features/authentication/presentation/pages/regis
 import 'package:social_academic/features/authentication/presentation/pages/email_verification_page.dart';
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/home/presentation/pages/home_page.dart';
+import 'package:social_academic/features/mini_courses/presentation/pages/mini_course_detail_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/create_post_page.dart';
 import 'package:social_academic/features/mini_courses/presentation/pages/create_mini_course_page.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
@@ -78,10 +79,14 @@ GoRouter appRouter(AuthNotifier authNotifier) {
             // Animação de slide de cima para baixo
             const begin = Offset(0.0, -1.0);
             const end = Offset.zero;
-            final tween = Tween(begin: begin, end: end)
-                .chain(CurveTween(curve: Curves.easeInOut));
+            final tween = Tween(
+              begin: begin,
+              end: end,
+            ).chain(CurveTween(curve: Curves.easeInOut));
             return SlideTransition(
-                position: animation.drive(tween), child: child);
+              position: animation.drive(tween),
+              child: child,
+            );
           },
         ),
       ),
@@ -94,14 +99,18 @@ GoRouter appRouter(AuthNotifier authNotifier) {
             child: const CreatePostPage(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              // Animação de slide de baixo para cima
-              const begin = Offset(0.0, 1.0);
-              const end = Offset.zero;
-              final tween = Tween(begin: begin, end: end)
-                  .chain(CurveTween(curve: Curves.easeInOut));
-              return SlideTransition(
-                  position: animation.drive(tween), child: child);
-            },
+                  // Animação de slide de baixo para cima
+                  const begin = Offset(0.0, 1.0);
+                  const end = Offset.zero;
+                  final tween = Tween(
+                    begin: begin,
+                    end: end,
+                  ).chain(CurveTween(curve: Curves.easeInOut));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
           );
         },
       ),
@@ -114,15 +123,26 @@ GoRouter appRouter(AuthNotifier authNotifier) {
             child: const CreateMiniCoursePage(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              // Animação de slide de baixo para cima, igual à de criar post
-              const begin = Offset(0.0, 1.0);
-              const end = Offset.zero;
-              final tween = Tween(begin: begin, end: end)
-                  .chain(CurveTween(curve: Curves.easeInOut));
-              return SlideTransition(
-                  position: animation.drive(tween), child: child);
-            },
+                  // Animação de slide de baixo para cima, igual à de criar post
+                  const begin = Offset(0.0, 1.0);
+                  const end = Offset.zero;
+                  final tween = Tween(
+                    begin: begin,
+                    end: end,
+                  ).chain(CurveTween(curve: Curves.easeInOut));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
           );
+        },
+      ),
+      GoRoute(
+        path: '/mini-courses/:id',
+        builder: (context, state) {
+          final miniCourseId = state.pathParameters['id']!;
+          return MiniCourseDetailPage(miniCourseId: miniCourseId);
         },
       ),
       GoRoute(
@@ -135,14 +155,18 @@ GoRouter appRouter(AuthNotifier authNotifier) {
             child: EditPostPage(post: post),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              // Animação de slide de baixo para cima
-              const begin = Offset(0.0, 1.0);
-              const end = Offset.zero;
-              final tween = Tween(begin: begin, end: end)
-                  .chain(CurveTween(curve: Curves.easeInOut));
-              return SlideTransition(
-                  position: animation.drive(tween), child: child);
-            },
+                  // Animação de slide de baixo para cima
+                  const begin = Offset(0.0, 1.0);
+                  const end = Offset.zero;
+                  final tween = Tween(
+                    begin: begin,
+                    end: end,
+                  ).chain(CurveTween(curve: Curves.easeInOut));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
           );
         },
       ),
@@ -155,14 +179,18 @@ GoRouter appRouter(AuthNotifier authNotifier) {
             child: PostCommentsPage(postId: state.pathParameters['id']!),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              // Animação de slide de baixo para cima
-              const begin = Offset(0.0, 1.0);
-              const end = Offset.zero;
-              final tween = Tween(begin: begin, end: end)
-                  .chain(CurveTween(curve: Curves.easeInOut));
-              return SlideTransition(
-                  position: animation.drive(tween), child: child);
-            },
+                  // Animação de slide de baixo para cima
+                  const begin = Offset(0.0, 1.0);
+                  const end = Offset.zero;
+                  final tween = Tween(
+                    begin: begin,
+                    end: end,
+                  ).chain(CurveTween(curve: Curves.easeInOut));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
           );
         },
       ),
@@ -175,13 +203,18 @@ GoRouter appRouter(AuthNotifier authNotifier) {
             child: const ProfilePageProvider(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              // Animação de slide da direita para a esquerda
-              const begin = Offset(1.0, 0.0);
-              const end = Offset.zero;
-              final tween =
-                  Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
-              return SlideTransition(position: animation.drive(tween), child: child);
-            },
+                  // Animação de slide da direita para a esquerda
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  final tween = Tween(
+                    begin: begin,
+                    end: end,
+                  ).chain(CurveTween(curve: Curves.easeInOut));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
           );
         },
       ),
@@ -195,13 +228,18 @@ GoRouter appRouter(AuthNotifier authNotifier) {
             child: UserProfilePage(userId: userId),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              // Animação de slide da direita para a esquerda
-              const begin = Offset(1.0, 0.0);
-              const end = Offset.zero;
-              final tween =
-                  Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
-              return SlideTransition(position: animation.drive(tween), child: child);
-            },
+                  // Animação de slide da direita para a esquerda
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  final tween = Tween(
+                    begin: begin,
+                    end: end,
+                  ).chain(CurveTween(curve: Curves.easeInOut));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
           );
         },
       ),
@@ -214,13 +252,18 @@ GoRouter appRouter(AuthNotifier authNotifier) {
             child: const EditProfilePage(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              // Animação de slide de baixo para cima
-              const begin = Offset(0.0, 1.0);
-              const end = Offset.zero;
-              final tween =
-                  Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
-              return SlideTransition(position: animation.drive(tween), child: child);
-            },
+                  // Animação de slide de baixo para cima
+                  const begin = Offset(0.0, 1.0);
+                  const end = Offset.zero;
+                  final tween = Tween(
+                    begin: begin,
+                    end: end,
+                  ).chain(CurveTween(curve: Curves.easeInOut));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
           );
         },
       ),

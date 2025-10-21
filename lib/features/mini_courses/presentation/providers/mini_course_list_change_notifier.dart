@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:social_academic/features/mini_courses/domain/entities/mini_course.dart';
+import 'package:social_academic/features/mini_courses/domain/usecases/enroll_mini_course.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/get_mini_courses.dart';
 
 enum MiniCourseListState {
@@ -12,8 +13,9 @@ enum MiniCourseListState {
 
 class MiniCourseListChangeNotifier extends ChangeNotifier {
   final GetMiniCourses _getMiniCoursesUseCase;
+  final EnrollMiniCourse _enrollMiniCourseUseCase;
 
-  MiniCourseListChangeNotifier(this._getMiniCoursesUseCase);
+  MiniCourseListChangeNotifier(this._getMiniCoursesUseCase, this._enrollMiniCourseUseCase);
 
   MiniCourseListState _state = MiniCourseListState.idle;
   MiniCourseListState get state => _state;
@@ -83,5 +85,27 @@ class MiniCourseListChangeNotifier extends ChangeNotifier {
   void addNewMiniCourse(MiniCourse miniCourse) {
     _miniCourses.insert(0, miniCourse);
     notifyListeners();
+  }
+
+  /// Inscreve o usuário em um minicurso e atualiza o estado local.
+  Future<bool> enrollInMiniCourse(String miniCourseId) async {
+    final result = await _enrollMiniCourseUseCase(miniCourseId);
+
+    return result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        notifyListeners(); // Notifica para que a UI possa mostrar o erro
+        return false;
+      },
+      (_) {
+        final index = _miniCourses.indexWhere((course) => course.id == miniCourseId);
+        if (index != -1) {
+          // Atualiza o curso na lista para refletir a inscrição
+          _miniCourses[index] = _miniCourses[index].copyWith(isEnrolled: true);
+          notifyListeners();
+        }
+        return true;
+      },
+    );
   }
 }

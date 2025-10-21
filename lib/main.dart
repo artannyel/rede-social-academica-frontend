@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/get_my_mini_courses.dart';
-import 'package:social_academic/features/mini_courses/presentation/providers/mini_course_list_change_notifier.dart';
 import 'package:social_academic/features/posts/domain/usecases/edit_post.dart';
 import 'package:social_academic/features/posts/domain/usecases/like_comment.dart';
 import 'package:url_strategy/url_strategy.dart';
@@ -57,6 +56,9 @@ import 'package:social_academic/features/mini_courses/data/repositories/mini_cou
 import 'package:social_academic/features/mini_courses/domain/repositories/mini_course_repository.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/create_mini_course.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/get_mini_courses.dart';
+import 'package:social_academic/features/mini_courses/domain/usecases/enroll_mini_course.dart';
+import 'package:social_academic/features/mini_courses/domain/usecases/get_mini_course_detail.dart';
+import 'package:social_academic/features/mini_courses/domain/usecases/publish_mini_course.dart';
 
 late final FirebaseApp app;
 late final FirebaseAuth auth;
@@ -226,6 +228,12 @@ class MyApp extends StatelessWidget {
             create: (context) => GetMiniCourses(context.read<MiniCourseRepository>())),
         Provider<GetMyMiniCourses>(
             create: (context) => GetMyMiniCourses(context.read<MiniCourseRepository>())),
+        Provider<EnrollMiniCourse>(
+            create: (context) => EnrollMiniCourse(context.read<MiniCourseRepository>())),
+        Provider<GetMiniCourseDetail>(
+            create: (context) => GetMiniCourseDetail(context.read<MiniCourseRepository>())),
+        Provider<PublishMiniCourse>(
+            create: (context) => PublishMiniCourse(context.read<MiniCourseRepository>())),
 
         // Camada de Apresentação (Presentation) - Notifiers de Estado Global
         ChangeNotifierProvider<UserNotifier>(
@@ -266,9 +274,6 @@ class MyApp extends StatelessWidget {
             context.read<UpdateUser>(),
             context.read<UserNotifier>(),
           ),
-        ),
-        ChangeNotifierProvider<MiniCourseListChangeNotifier>(
-          create: (context) => MiniCourseListChangeNotifier(context.read<GetMiniCourses>()),
         ),
       ],
       // Usamos um Consumer para obter um `context` que está abaixo do MultiProvider

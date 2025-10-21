@@ -69,4 +69,43 @@ class MiniCourseRepositoryImpl implements MiniCourseRepository {
       );
     }
   }
+
+  @override
+  Future<Either<Failure, void>> enrollMiniCourse({required String miniCourseId}) async {
+    try {
+      await remoteDataSource.enrollMiniCourse(miniCourseId: miniCourseId);
+      return const Right(null);
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Não foi possível se inscrever no curso.';
+      return Left(ServerFailure(message));
+    } on Exception catch (e) {
+      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MiniCourse>> getMiniCourseDetail({required String miniCourseId}) async {
+    try {
+      final miniCourseModel = await remoteDataSource.getMiniCourseDetail(miniCourseId: miniCourseId);
+      return Right(miniCourseModel.toEntity());
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Não foi possível carregar os detalhes do curso.';
+      return Left(ServerFailure(message));
+    } on Exception catch (e) {
+      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MiniCourse>> publishMiniCourse({required String miniCourseId}) async {
+    try {
+      final miniCourseModel = await remoteDataSource.publishMiniCourse(miniCourseId: miniCourseId);
+      return Right(miniCourseModel.toEntity());
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Não foi possível publicar o curso.';
+      return Left(ServerFailure(message));
+    } on Exception catch (e) {
+      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
 }

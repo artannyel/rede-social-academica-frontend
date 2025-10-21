@@ -19,6 +19,12 @@ abstract class MiniCourseRemoteDataSource {
   Future<PaginatedResponse<MiniCourseModel>> getMiniCourses({required int page});
   
   Future<PaginatedResponse<MiniCourseModel>> getMyMiniCourses({required int page});
+
+  Future<void> enrollMiniCourse({required String miniCourseId});
+
+  Future<MiniCourseModel> getMiniCourseDetail({required String miniCourseId});
+
+  Future<MiniCourseModel> publishMiniCourse({required String miniCourseId});
 }
 
 class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
@@ -108,5 +114,49 @@ class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
     );
 
     return PaginatedResponse.fromJson(response.data, MiniCourseModel.fromJson);
+  }
+
+  @override
+  Future<void> enrollMiniCourse({required String miniCourseId}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para se inscrever no curso.');
+    }
+
+    await dio.post(
+      '/mini-courses/$miniCourseId/register',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  @override
+  Future<MiniCourseModel> getMiniCourseDetail({required String miniCourseId}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para ver detalhes do curso.');
+    }
+
+    final response = await dio.get(
+      '/mini-courses/$miniCourseId',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    return MiniCourseModel.fromJson(response.data);
+  }
+
+  @override
+  Future<MiniCourseModel> publishMiniCourse({required String miniCourseId}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para publicar o curso.');
+    }
+
+    final response = await dio.patch(
+      '/mini-courses/$miniCourseId/publish',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    // A API retorna o minicurso atualizado
+    return MiniCourseModel.fromJson(response.data);
   }
 }

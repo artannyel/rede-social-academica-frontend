@@ -17,4 +17,10 @@ abstract class MiniCourseRepository {
   Future<Either<Failure, PaginatedResponse<MiniCourse>>> getMyMiniCourses({
     required int page,
   });
+
+  Future<Either<Failure, void>> enrollMiniCourse({required String miniCourseId});
+
+  Future<Either<Failure, MiniCourse>> getMiniCourseDetail({required String miniCourseId});
+
+  Future<Either<Failure, MiniCourse>> publishMiniCourse({required String miniCourseId});
 }

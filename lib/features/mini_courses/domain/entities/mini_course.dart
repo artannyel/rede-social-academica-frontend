@@ -9,6 +9,8 @@ class MiniCourse extends Equatable {
   final String? photoUrl;
   final List<Course>? courses;
   final User? user;
+  final bool isEnrolled;
+  final bool isPublished;
 
   const MiniCourse({
     required this.id,
@@ -17,8 +19,32 @@ class MiniCourse extends Equatable {
     this.photoUrl,
     this.courses,
     this.user,
+    this.isEnrolled = false,
+    this.isPublished = false,
   });
 
   @override
-  List<Object?> get props => [id, title, description, photoUrl, courses, user];
+  List<Object?> get props => [id, title, description, photoUrl, courses, user, isEnrolled, isPublished];
+
+  MiniCourse copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? photoUrl,
+    List<Course>? courses,
+    User? user,
+    bool? isEnrolled,
+    bool? isPublished,
+  }) {
+    return MiniCourse(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      photoUrl: photoUrl ?? this.photoUrl,
+      courses: courses ?? this.courses,
+      user: user ?? this.user,
+      isEnrolled: isEnrolled ?? this.isEnrolled,
+      isPublished: isPublished ?? this.isPublished,
+    );
+  }
 }

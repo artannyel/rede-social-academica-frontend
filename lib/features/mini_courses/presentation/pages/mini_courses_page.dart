@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:social_academic/features/mini_courses/domain/usecases/enroll_mini_course.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/get_mini_courses.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/get_my_mini_courses.dart';
 import 'package:social_academic/features/mini_courses/presentation/pages/mini_course_list_page.dart';
@@ -15,8 +16,10 @@ class MiniCoursesPage extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (context) =>
-              MiniCourseListChangeNotifier(context.read<GetMiniCourses>()),
+          create: (context) => MiniCourseListChangeNotifier(
+            context.read<GetMiniCourses>(),
+            context.read<EnrollMiniCourse>(),
+          ),
         ),
         ChangeNotifierProvider(
           create: (context) =>
