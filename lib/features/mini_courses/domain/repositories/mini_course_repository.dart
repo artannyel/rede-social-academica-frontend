@@ -13,4 +13,8 @@ abstract class MiniCourseRepository {
   });
 
   Future<Either<Failure, PaginatedResponse<MiniCourse>>> getMiniCourses({required int page});
+
+  Future<Either<Failure, PaginatedResponse<MiniCourse>>> getMyMiniCourses({
+    required int page,
+  });
 }

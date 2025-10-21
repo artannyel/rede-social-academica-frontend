@@ -33,4 +33,15 @@ class MiniCourseModel extends MiniCourse {
         'courses': courses?.map((e) => (e as CourseModel).toJson()).toList(),
         'user': user != null ? (user as UserModel).toJson() : null,
       };
+
+  MiniCourse toEntity() {
+    return MiniCourse(
+      id: id,
+      title: title,
+      description: description,
+      photoUrl: photoUrl,
+      courses: courses,
+      user: user,
+    );
+  }
 }

@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:social_academic/features/mini_courses/domain/entities/mini_course.dart';
+import 'package:social_academic/features/mini_courses/presentation/providers/my_mini_course_list_change_notifier.dart';
 import 'package:social_academic/features/mini_courses/presentation/providers/mini_course_list_change_notifier.dart';
 import 'package:social_academic/app/core/theme/theme_notifier.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
-import 'package:social_academic/features/mini_courses/presentation/pages/mini_course_list_page.dart';
+import 'package:social_academic/features/mini_courses/presentation/pages/mini_courses_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/post_list_page.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
 
@@ -29,7 +30,7 @@ class _HomePageState extends State<HomePage> {
   // Telas que serão exibidas
   static const List<Widget> _widgetOptions = <Widget>[
     PostListPage(),
-    MiniCourseListPage(),
+    MiniCoursesPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -51,7 +52,11 @@ class _HomePageState extends State<HomePage> {
         onPressed: () async {
           final newMiniCourse = await context.push<MiniCourse>('/mini-courses/create');
           if (newMiniCourse != null && context.mounted) {
+            // Adiciona o novo curso na lista de "Todos"
             context.read<MiniCourseListChangeNotifier>().addNewMiniCourse(newMiniCourse);
+            // Adiciona o novo curso na lista de "Meus Cursos"
+            // O `read` funciona pois o provider foi criado na MiniCoursesPage, que já está na árvore.
+            context.read<MyMiniCourseListChangeNotifier>().addMiniCourse(newMiniCourse);
           }
         },
         tooltip: 'Novo Mini Curso',

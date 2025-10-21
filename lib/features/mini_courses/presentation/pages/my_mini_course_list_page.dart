@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:provider/provider.dart';
-import 'package:social_academic/features/mini_courses/presentation/providers/mini_course_list_change_notifier.dart';
+import 'package:social_academic/features/mini_courses/presentation/providers/my_mini_course_list_change_notifier.dart';
 import 'package:social_academic/features/mini_courses/presentation/widgets/mini_course_card.dart';
 import 'package:social_academic/features/mini_courses/presentation/widgets/mini_course_card_skeleton.dart';
 
-class MiniCourseListPage extends StatefulWidget {
-  const MiniCourseListPage({super.key});
+class MyMiniCourseListPage extends StatefulWidget {
+  const MyMiniCourseListPage({super.key});
 
   @override
-  State<MiniCourseListPage> createState() => _MiniCourseListPageState();
+  State<MyMiniCourseListPage> createState() => _MyMiniCourseListPageState();
 }
 
-class _MiniCourseListPageState extends State<MiniCourseListPage> with AutomaticKeepAliveClientMixin {
+class _MyMiniCourseListPageState extends State<MyMiniCourseListPage>
+    with AutomaticKeepAliveClientMixin {
   final _scrollController = ScrollController();
 
   @override
@@ -22,14 +23,11 @@ class _MiniCourseListPageState extends State<MiniCourseListPage> with AutomaticK
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Garante que o contexto ainda é válido
       if (mounted) {
-        // Só busca se a lista estiver vazia, para não recarregar ao trocar de aba
-        final notifier = context.read<MiniCourseListChangeNotifier>();
+        final notifier = context.read<MyMiniCourseListChangeNotifier>();
         if (notifier.miniCourses.isEmpty) {
           notifier.fetchInitialMiniCourses();
         }
-        // Adiciona o listener para o scroll infinito
         _scrollController.addListener(_onScroll);
       }
     });
@@ -42,24 +40,26 @@ class _MiniCourseListPageState extends State<MiniCourseListPage> with AutomaticK
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-      // Garante que o contexto ainda é válido antes de ler o provider
-      if (mounted) context.read<MiniCourseListChangeNotifier>().fetchMoreMiniCourses();
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (mounted) {
+        context.read<MyMiniCourseListChangeNotifier>().fetchMoreMiniCourses();
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Necessário para o AutomaticKeepAliveClientMixin
-    return Consumer<MiniCourseListChangeNotifier>(
+    super.build(context);
+    return Consumer<MyMiniCourseListChangeNotifier>(
       builder: (context, notifier, child) {
-        if (notifier.state == MiniCourseListState.loadingInitial) {
+        if (notifier.state == MyMiniCourseListState.loadingInitial) {
           return ListView.builder(
             itemCount: 5,
             itemBuilder: (context, index) => const MiniCourseCardSkeleton(),
           );
         }
-        if (notifier.state == MiniCourseListState.error &&
+        if (notifier.state == MyMiniCourseListState.error &&
             notifier.miniCourses.isEmpty) {
           return Center(
             child: Column(
@@ -76,15 +76,14 @@ class _MiniCourseListPageState extends State<MiniCourseListPage> with AutomaticK
           );
         }
         if (notifier.miniCourses.isEmpty) {
-          return const Center(child: Text('Nenhum mini curso encontrado.'));
+          return const Center(child: Text('Você ainda não criou nenhum mini curso.'));
         }
         return RefreshIndicator(
           onRefresh: () => notifier.fetchInitialMiniCourses(),
           child: AnimationLimiter(
             child: ListView.builder(
               controller: _scrollController,
-              itemCount: notifier.miniCourses.length +
-                  (notifier.hasMorePages ? 1 : 0),
+              itemCount: notifier.miniCourses.length + (notifier.hasMorePages ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == notifier.miniCourses.length) {
                   return const Padding(
@@ -93,14 +92,7 @@ class _MiniCourseListPageState extends State<MiniCourseListPage> with AutomaticK
                   );
                 }
                 final miniCourse = notifier.miniCourses[index];
-                return AnimationConfiguration.staggeredList(
-                  position: index,
-                  duration: const Duration(milliseconds: 375),
-                  child: SlideAnimation(
-                      verticalOffset: 50.0,
-                      child: FadeInAnimation(
-                          child: MiniCourseCard(miniCourse: miniCourse))),
-                );
+                return AnimationConfiguration.staggeredList(position: index, duration: const Duration(milliseconds: 375), child: SlideAnimation(verticalOffset: 50.0, child: FadeInAnimation(child: MiniCourseCard(miniCourse: miniCourse))));
               },
             ),
           ),

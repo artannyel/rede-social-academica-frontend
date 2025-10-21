@@ -17,6 +17,8 @@ abstract class MiniCourseRemoteDataSource {
   });
 
   Future<PaginatedResponse<MiniCourseModel>> getMiniCourses({required int page});
+  
+  Future<PaginatedResponse<MiniCourseModel>> getMyMiniCourses({required int page});
 }
 
 class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
@@ -85,6 +87,22 @@ class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
 
     final response = await dio.get(
       '/mini-courses',
+      queryParameters: {'page': page},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    return PaginatedResponse.fromJson(response.data, MiniCourseModel.fromJson);
+  }
+
+  @override
+  Future<PaginatedResponse<MiniCourseModel>> getMyMiniCourses({required int page}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para listar mini cursos.');
+    }
+
+    final response = await dio.get(
+      '/me/mini-courses',
       queryParameters: {'page': page},
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
