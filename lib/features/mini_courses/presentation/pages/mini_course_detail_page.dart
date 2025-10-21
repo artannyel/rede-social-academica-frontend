@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:social_academic/features/mini_courses/domain/entities/lesson.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/publish_mini_course.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/mini_courses/domain/entities/mini_course.dart';
@@ -61,7 +63,14 @@ class _MiniCourseDetailView extends StatelessWidget {
                 floating: false,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
-                  title: Text(miniCourse.title, style: const TextStyle(shadows: [Shadow(blurRadius: 8)])),
+                  title: Text(
+                    miniCourse.title,
+                    style: const TextStyle(shadows: [Shadow(blurRadius: 8)]),
+                  ),
+                  titlePadding: const EdgeInsets.symmetric(
+                    horizontal: 72,
+                    vertical: 16,
+                  ),
                   background: miniCourse.photoUrl != null
                       ? Image.network(
                           miniCourse.photoUrl!,
@@ -71,6 +80,30 @@ class _MiniCourseDetailView extends StatelessWidget {
                         )
                       : Container(color: Theme.of(context).primaryColor),
                 ),
+                actions: [
+                  if (isOwner)
+                    IconButton(
+                      icon: const Icon(Icons.add_box_outlined),
+                      tooltip: 'Adicionar Aula',
+                      onPressed: () async {
+                        final newLesson = await context.push<Lesson>(
+                          '/mini-courses/${miniCourse.id}/add-lesson',
+                        );
+                        if (newLesson != null && context.mounted) {
+                          // Atualiza a UI localmente com a nova aula
+                          final notifier = context
+                              .read<MiniCourseDetailChangeNotifier>();
+                          final currentLessons =
+                              notifier.miniCourse?.lessons ?? [];
+                          notifier.updateCourse(
+                            notifier.miniCourse!.copyWith(
+                              lessons: [...currentLessons, newLesson],
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                ],
               ),
               SliverToBoxAdapter(
                 child: ResponsiveLayout(
@@ -79,23 +112,34 @@ class _MiniCourseDetailView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _buildActionSection(context, miniCourse, isOwner),
+                        const SizedBox(height: 24),
                         Text('Descrição', style: textTheme.headlineSmall),
                         const SizedBox(height: 8),
-                        Text(miniCourse.description, style: textTheme.bodyLarge),
+                        Text(
+                          miniCourse.description,
+                          style: textTheme.bodyLarge,
+                        ),
                         const SizedBox(height: 24),
                         if (miniCourse.user != null) ...[
                           Text('Criado por', style: textTheme.headlineSmall),
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              UserAvatar(photoUrl: miniCourse.user!.photoUrl, radius: 24),
+                              UserAvatar(
+                                photoUrl: miniCourse.user!.photoUrl,
+                                radius: 24,
+                              ),
                               const SizedBox(width: 12),
-                              Text(miniCourse.user!.name, style: textTheme.titleLarge),
+                              Text(
+                                miniCourse.user!.name,
+                                style: textTheme.titleLarge,
+                              ),
                             ],
                           ),
                           const SizedBox(height: 24),
                         ],
-                        _buildActionSection(context, miniCourse, isOwner),
+                        _buildLessonsSection(context, miniCourse.lessons ?? []),
                       ],
                     ),
                   ),
@@ -108,7 +152,52 @@ class _MiniCourseDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildActionSection(BuildContext context, MiniCourse miniCourse, bool isOwner) {
+  Widget _buildLessonsSection(BuildContext context, List<Lesson> lessons) {
+    if (lessons.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Aulas', style: textTheme.headlineSmall),
+        const SizedBox(height: 8),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: lessons.length,
+          itemBuilder: (context, index) {
+            final lesson = lessons[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              child: ListTile(
+                leading: CircleAvatar(child: Text('${index + 1}')),
+                title: Text(lesson.title),
+                subtitle: Text(
+                  lesson.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: lesson.youtubeUrl != null
+                    ? const Icon(Icons.play_circle_outline)
+                    : null,
+                onTap: lesson.youtubeUrl != null
+                    ?  () {
+                  // TODO: Implementar navegação para a tela da aula ou abrir o vídeo
+                } : null,
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionSection(
+    BuildContext context,
+    MiniCourse miniCourse,
+    bool isOwner,
+  ) {
     if (isOwner) {
       return Center(
         child: miniCourse.isPublished
@@ -121,7 +210,12 @@ class _MiniCourseDetailView extends StatelessWidget {
                 onPressed: () => _publish(context),
                 icon: const Icon(Icons.publish_outlined),
                 label: const Text('Publicar Curso'),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                ),
               ),
       );
     }
@@ -139,7 +233,12 @@ class _MiniCourseDetailView extends StatelessWidget {
                 onPressed: () => _enroll(context, miniCourse),
                 icon: const Icon(Icons.school_outlined),
                 label: const Text('Inscrever-se no curso'),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                ),
               ),
       );
     }
@@ -154,7 +253,9 @@ class _MiniCourseDetailView extends StatelessWidget {
 
     final success = await listNotifier.enrollInMiniCourse(miniCourse.id);
     if (context.mounted) {
-      final message = success ? 'Inscrição realizada com sucesso!' : (listNotifier.errorMessage ?? 'Falha ao se inscrever.');
+      final message = success
+          ? 'Inscrição realizada com sucesso!'
+          : (listNotifier.errorMessage ?? 'Falha ao se inscrever.');
       final type = success ? SnackBarType.success : SnackBarType.error;
       showAppSnackBar(context, message: message, type: type);
       if (success) {
@@ -168,7 +269,9 @@ class _MiniCourseDetailView extends StatelessWidget {
     final success = await detailNotifier.publishCourse();
 
     if (context.mounted) {
-      final message = success ? 'Curso publicado com sucesso!' : (detailNotifier.errorMessage ?? 'Falha ao publicar o curso.');
+      final message = success
+          ? 'Curso publicado com sucesso!'
+          : (detailNotifier.errorMessage ?? 'Falha ao publicar o curso.');
       final type = success ? SnackBarType.success : SnackBarType.error;
       showAppSnackBar(context, message: message, type: type);
     }

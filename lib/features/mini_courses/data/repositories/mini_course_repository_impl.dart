@@ -5,6 +5,7 @@ import 'package:social_academic/app/core/error/failure.dart';
 import 'package:social_academic/app/core/domain/entities/paginated_response.dart' as domain;
 import 'package:social_academic/features/mini_courses/data/datasources/mini_course_remote_datasource.dart';
 import 'package:social_academic/features/mini_courses/domain/entities/mini_course.dart';
+import 'package:social_academic/features/mini_courses/domain/entities/lesson.dart';
 import 'package:social_academic/features/mini_courses/domain/repositories/mini_course_repository.dart';
 
 class MiniCourseRepositoryImpl implements MiniCourseRepository {
@@ -103,6 +104,29 @@ class MiniCourseRepositoryImpl implements MiniCourseRepository {
       return Right(miniCourseModel.toEntity());
     } on DioException catch (e) {
       final message = e.response?.data['message'] ?? 'Não foi possível publicar o curso.';
+      return Left(ServerFailure(message));
+    } on Exception catch (e) {
+      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Lesson>> addLesson({
+    required String miniCourseId,
+    required String title,
+    required String description,
+    required String youtubeUrl,
+  }) async {
+    try {
+      final lessonModel = await remoteDataSource.addLesson(
+        miniCourseId: miniCourseId,
+        title: title,
+        description: description,
+        youtubeUrl: youtubeUrl,
+      );
+      return Right(lessonModel.toEntity());
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Não foi possível adicionar a aula.';
       return Left(ServerFailure(message));
     } on Exception catch (e) {
       return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));

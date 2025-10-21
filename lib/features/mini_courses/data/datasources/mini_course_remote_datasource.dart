@@ -7,6 +7,7 @@ import 'package:mime/mime.dart';
 import 'package:social_academic/app/core/utils/image_converter.dart';
 import 'package:social_academic/app/core/data/models/paginated_response.dart';
 import 'package:social_academic/features/mini_courses/data/models/mini_course_model.dart';
+import 'package:social_academic/features/mini_courses/data/models/lesson_model.dart';
 
 abstract class MiniCourseRemoteDataSource {
   Future<MiniCourseModel> createMiniCourse({
@@ -16,22 +17,36 @@ abstract class MiniCourseRemoteDataSource {
     required List<String> courses,
   });
 
-  Future<PaginatedResponse<MiniCourseModel>> getMiniCourses({required int page});
-  
-  Future<PaginatedResponse<MiniCourseModel>> getMyMiniCourses({required int page});
+  Future<PaginatedResponse<MiniCourseModel>> getMiniCourses({
+    required int page,
+  });
+
+  Future<PaginatedResponse<MiniCourseModel>> getMyMiniCourses({
+    required int page,
+  });
 
   Future<void> enrollMiniCourse({required String miniCourseId});
 
   Future<MiniCourseModel> getMiniCourseDetail({required String miniCourseId});
 
   Future<MiniCourseModel> publishMiniCourse({required String miniCourseId});
+
+  Future<LessonModel> addLesson({
+    required String miniCourseId,
+    required String title,
+    required String description,
+    required String youtubeUrl,
+  });
 }
 
 class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
   final Dio dio;
   final firebase.FirebaseAuth firebaseAuth;
 
-  MiniCourseRemoteDataSourceImpl({required this.dio, required this.firebaseAuth});
+  MiniCourseRemoteDataSourceImpl({
+    required this.dio,
+    required this.firebaseAuth,
+  });
 
   @override
   Future<MiniCourseModel> createMiniCourse({
@@ -51,7 +66,9 @@ class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
       final formData = FormData();
       formData.fields.add(MapEntry('title', title));
       formData.fields.add(MapEntry('description', description));
-      courses.forEach((courseId) => formData.fields.add(MapEntry('courses[]', courseId)));
+      courses.forEach(
+        (courseId) => formData.fields.add(MapEntry('courses[]', courseId)),
+      );
 
       final processedImage = await processAndConvertImage(photo);
       final bytes = Uint8List.fromList(processedImage['bytes'] as List<int>);
@@ -61,9 +78,11 @@ class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
       formData.files.add(
         MapEntry(
           'photo',
-          MultipartFile.fromBytes(bytes,
-              filename: fileName,
-              contentType: mimeType != null ? MediaType.parse(mimeType) : null),
+          MultipartFile.fromBytes(
+            bytes,
+            filename: fileName,
+            contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+          ),
         ),
       );
       requestData = formData;
@@ -85,7 +104,9 @@ class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
   }
 
   @override
-  Future<PaginatedResponse<MiniCourseModel>> getMiniCourses({required int page}) async {
+  Future<PaginatedResponse<MiniCourseModel>> getMiniCourses({
+    required int page,
+  }) async {
     final token = await firebaseAuth.currentUser?.getIdToken();
     if (token == null) {
       throw Exception('Usuário não autenticado para listar mini cursos.');
@@ -101,7 +122,9 @@ class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
   }
 
   @override
-  Future<PaginatedResponse<MiniCourseModel>> getMyMiniCourses({required int page}) async {
+  Future<PaginatedResponse<MiniCourseModel>> getMyMiniCourses({
+    required int page,
+  }) async {
     final token = await firebaseAuth.currentUser?.getIdToken();
     if (token == null) {
       throw Exception('Usuário não autenticado para listar mini cursos.');
@@ -130,7 +153,9 @@ class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
   }
 
   @override
-  Future<MiniCourseModel> getMiniCourseDetail({required String miniCourseId}) async {
+  Future<MiniCourseModel> getMiniCourseDetail({
+    required String miniCourseId,
+  }) async {
     final token = await firebaseAuth.currentUser?.getIdToken();
     if (token == null) {
       throw Exception('Usuário não autenticado para ver detalhes do curso.');
@@ -145,7 +170,9 @@ class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
   }
 
   @override
-  Future<MiniCourseModel> publishMiniCourse({required String miniCourseId}) async {
+  Future<MiniCourseModel> publishMiniCourse({
+    required String miniCourseId,
+  }) async {
     final token = await firebaseAuth.currentUser?.getIdToken();
     if (token == null) {
       throw Exception('Usuário não autenticado para publicar o curso.');
@@ -158,5 +185,30 @@ class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
 
     // A API retorna o minicurso atualizado
     return MiniCourseModel.fromJson(response.data);
+  }
+
+  @override
+  Future<LessonModel> addLesson({
+    required String miniCourseId,
+    required String title,
+    required String description,
+    required String youtubeUrl,
+  }) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para adicionar aula.');
+    }
+
+    final response = await dio.post(
+      '/mini-courses/$miniCourseId/classes',
+      data: {
+        'title': title,
+        'description': description,
+        'youtube_url': youtubeUrl,
+      },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    return LessonModel.fromJson(response.data);
   }
 }

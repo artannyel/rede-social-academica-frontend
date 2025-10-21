@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:social_academic/features/authentication/domain/entities/user.dart';
 import 'package:social_academic/features/courses/domain/entities/course.dart';
+import 'package:social_academic/features/mini_courses/domain/entities/lesson.dart';
 
 class MiniCourse extends Equatable {
   final String id;
@@ -11,6 +12,7 @@ class MiniCourse extends Equatable {
   final User? user;
   final bool isEnrolled;
   final bool isPublished;
+  final List<Lesson>? lessons;
 
   const MiniCourse({
     required this.id,
@@ -21,10 +23,11 @@ class MiniCourse extends Equatable {
     this.user,
     this.isEnrolled = false,
     this.isPublished = false,
+    this.lessons,
   });
 
   @override
-  List<Object?> get props => [id, title, description, photoUrl, courses, user, isEnrolled, isPublished];
+  List<Object?> get props => [id, title, description, photoUrl, courses, user, isEnrolled, isPublished, lessons];
 
   MiniCourse copyWith({
     String? id,
@@ -35,6 +38,7 @@ class MiniCourse extends Equatable {
     User? user,
     bool? isEnrolled,
     bool? isPublished,
+    List<Lesson>? lessons,
   }) {
     return MiniCourse(
       id: id ?? this.id,
@@ -45,6 +49,7 @@ class MiniCourse extends Equatable {
       user: user ?? this.user,
       isEnrolled: isEnrolled ?? this.isEnrolled,
       isPublished: isPublished ?? this.isPublished,
+      lessons: lessons ?? this.lessons,
     );
   }
 }

@@ -59,6 +59,7 @@ import 'package:social_academic/features/mini_courses/domain/usecases/get_mini_c
 import 'package:social_academic/features/mini_courses/domain/usecases/enroll_mini_course.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/get_mini_course_detail.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/publish_mini_course.dart';
+import 'package:social_academic/features/mini_courses/domain/usecases/add_lesson_to_mini_course.dart';
 
 late final FirebaseApp app;
 late final FirebaseAuth auth;
@@ -234,6 +235,8 @@ class MyApp extends StatelessWidget {
             create: (context) => GetMiniCourseDetail(context.read<MiniCourseRepository>())),
         Provider<PublishMiniCourse>(
             create: (context) => PublishMiniCourse(context.read<MiniCourseRepository>())),
+        Provider<AddLessonToMiniCourse>(
+            create: (context) => AddLessonToMiniCourse(context.read<MiniCourseRepository>())),
 
         // Camada de Apresentação (Presentation) - Notifiers de Estado Global
         ChangeNotifierProvider<UserNotifier>(

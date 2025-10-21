@@ -1,6 +1,7 @@
 import 'package:social_academic/features/courses/data/models/course_model.dart';
 import 'package:social_academic/features/authentication/data/models/user_model.dart';
 import 'package:social_academic/features/mini_courses/domain/entities/mini_course.dart';
+import 'package:social_academic/features/mini_courses/data/models/lesson_model.dart';
 
 class MiniCourseModel extends MiniCourse {
   const MiniCourseModel({
@@ -12,6 +13,7 @@ class MiniCourseModel extends MiniCourse {
     super.user,
     super.isEnrolled,
     super.isPublished,
+    super.lessons,
   });
 
   factory MiniCourseModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,9 @@ class MiniCourseModel extends MiniCourse {
       user: json['user'] != null ? UserModel.fromJson(json['user']) : null,
       isEnrolled: json['is_enrolled'] ?? false,
       isPublished: json['published'] ?? false,
+      lessons: json['classes'] != null
+          ? (json['classes'] as List).map((e) => LessonModel.fromJson(e)).toList()
+          : null,
     );
   }
 
@@ -38,6 +43,7 @@ class MiniCourseModel extends MiniCourse {
         'user': user != null ? (user as UserModel).toJson() : null,
         'is_enrolled': isEnrolled,
         'published': isPublished,
+        'classes': lessons?.map((e) => (e as LessonModel).toJson()).toList(),
       };
 
   MiniCourse toEntity() {
@@ -50,6 +56,7 @@ class MiniCourseModel extends MiniCourse {
       user: user,
       isEnrolled: isEnrolled,
       isPublished: isPublished,
+      lessons: lessons,
     );
   }
 }

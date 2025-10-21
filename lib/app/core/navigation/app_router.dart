@@ -6,6 +6,7 @@ import 'package:social_academic/features/authentication/presentation/pages/email
 import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/home/presentation/pages/home_page.dart';
 import 'package:social_academic/features/mini_courses/presentation/pages/mini_course_detail_page.dart';
+import 'package:social_academic/features/mini_courses/presentation/pages/add_lesson_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/create_post_page.dart';
 import 'package:social_academic/features/mini_courses/presentation/pages/create_mini_course_page.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
@@ -143,6 +144,26 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         builder: (context, state) {
           final miniCourseId = state.pathParameters['id']!;
           return MiniCourseDetailPage(miniCourseId: miniCourseId);
+        },
+      ),
+      GoRoute(
+        path: '/mini-courses/:id/add-lesson',
+        name: 'add-lesson',
+        pageBuilder: (context, state) {
+          final miniCourseId = state.pathParameters['id']!;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: AddLessonPage(miniCourseId: miniCourseId),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(0.0, 1.0);
+              const end = Offset.zero;
+              final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
+              return SlideTransition(
+                position: animation.drive(tween),
+                child: child,
+              );
+            },
+          );
         },
       ),
       GoRoute(
