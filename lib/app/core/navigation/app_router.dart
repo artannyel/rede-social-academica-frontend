@@ -7,6 +7,7 @@ import 'package:social_academic/app/core/auth/auth_notifier.dart';
 import 'package:social_academic/features/home/presentation/pages/home_page.dart';
 import 'package:social_academic/features/mini_courses/presentation/pages/mini_course_detail_page.dart';
 import 'package:social_academic/features/mini_courses/presentation/pages/add_lesson_page.dart';
+import 'package:social_academic/features/mini_courses/presentation/pages/lesson_player_page.dart';
 import 'package:social_academic/features/posts/presentation/pages/create_post_page.dart';
 import 'package:social_academic/features/mini_courses/presentation/pages/create_mini_course_page.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
@@ -16,6 +17,7 @@ import 'package:social_academic/features/profile/presentation/pages/edit_profile
 import 'package:social_academic/features/profile/presentation/pages/profile_page_provider.dart';
 import 'package:social_academic/features/profile/presentation/pages/user_profile_page.dart';
 import 'package:social_academic/features/splash/presentation/pages/splash_page.dart';
+import 'package:social_academic/features/mini_courses/domain/entities/lesson.dart';
 
 GoRouter appRouter(AuthNotifier authNotifier) {
   return GoRouter(
@@ -154,6 +156,26 @@ GoRouter appRouter(AuthNotifier authNotifier) {
           return CustomTransitionPage(
             key: state.pageKey,
             child: AddLessonPage(miniCourseId: miniCourseId),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(0.0, 1.0);
+              const end = Offset.zero;
+              final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
+              return SlideTransition(
+                position: animation.drive(tween),
+                child: child,
+              );
+            },
+          );
+        },
+      ),
+      GoRoute(
+        path: '/lessons/player',
+        name: 'lesson-player',
+        pageBuilder: (context, state) {
+          final lesson = state.extra as Lesson;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: LessonPlayerPage(lesson: lesson),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               const begin = Offset(0.0, 1.0);
               const end = Offset.zero;

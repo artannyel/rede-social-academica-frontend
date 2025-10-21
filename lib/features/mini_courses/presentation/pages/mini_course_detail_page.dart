@@ -80,30 +80,6 @@ class _MiniCourseDetailView extends StatelessWidget {
                         )
                       : Container(color: Theme.of(context).primaryColor),
                 ),
-                actions: [
-                  if (isOwner)
-                    IconButton(
-                      icon: const Icon(Icons.add_box_outlined),
-                      tooltip: 'Adicionar Aula',
-                      onPressed: () async {
-                        final newLesson = await context.push<Lesson>(
-                          '/mini-courses/${miniCourse.id}/add-lesson',
-                        );
-                        if (newLesson != null && context.mounted) {
-                          // Atualiza a UI localmente com a nova aula
-                          final notifier = context
-                              .read<MiniCourseDetailChangeNotifier>();
-                          final currentLessons =
-                              notifier.miniCourse?.lessons ?? [];
-                          notifier.updateCourse(
-                            notifier.miniCourse!.copyWith(
-                              lessons: [...currentLessons, newLesson],
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                ],
               ),
               SliverToBoxAdapter(
                 child: ResponsiveLayout(
@@ -139,7 +115,7 @@ class _MiniCourseDetailView extends StatelessWidget {
                           ),
                           const SizedBox(height: 24),
                         ],
-                        _buildLessonsSection(context, miniCourse.lessons ?? []),
+                        _buildLessonsSection(context, miniCourse, isOwner),
                       ],
                     ),
                   ),
@@ -152,15 +128,43 @@ class _MiniCourseDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildLessonsSection(BuildContext context, List<Lesson> lessons) {
-    if (lessons.isEmpty) {
-      return const SizedBox.shrink();
-    }
+  Widget _buildLessonsSection(
+    BuildContext context,
+    MiniCourse miniCourse,
+    bool isOwner,
+  ) {
+    final lessons = miniCourse.lessons ?? [];
     final textTheme = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Aulas', style: textTheme.headlineSmall),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Aulas', style: textTheme.headlineSmall),
+            if (isOwner)
+              IconButton(
+                icon: const Icon(Icons.add_box_outlined),
+                tooltip: 'Adicionar Aula',
+                onPressed: () async {
+                  final newLesson = await context.push<Lesson>(
+                    '/mini-courses/${miniCourse.id}/add-lesson',
+                  );
+                  if (newLesson != null && context.mounted) {
+                    // Atualiza a UI localmente com a nova aula
+                    final notifier = context
+                        .read<MiniCourseDetailChangeNotifier>();
+                    final currentLessons = notifier.miniCourse?.lessons ?? [];
+                    notifier.updateCourse(
+                      notifier.miniCourse!.copyWith(
+                        lessons: [...currentLessons, newLesson],
+                      ),
+                    );
+                  }
+                },
+              ),
+          ],
+        ),
         const SizedBox(height: 8),
         ListView.builder(
           shrinkWrap: true,
@@ -182,9 +186,8 @@ class _MiniCourseDetailView extends StatelessWidget {
                     ? const Icon(Icons.play_circle_outline)
                     : null,
                 onTap: lesson.youtubeUrl != null
-                    ?  () {
-                  // TODO: Implementar navegação para a tela da aula ou abrir o vídeo
-                } : null,
+                    ? () => context.push('/lessons/player', extra: lesson)
+                    : null,
               ),
             );
           },
