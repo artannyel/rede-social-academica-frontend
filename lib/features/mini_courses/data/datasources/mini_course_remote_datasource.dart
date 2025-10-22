@@ -37,6 +37,8 @@ abstract class MiniCourseRemoteDataSource {
     required String description,
     required String youtubeUrl,
   });
+
+  Future<LessonModel> getLessonDetail({required String lessonId});
 }
 
 class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
@@ -209,6 +211,22 @@ class MiniCourseRemoteDataSourceImpl implements MiniCourseRemoteDataSource {
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
 
+    return LessonModel.fromJson(response.data);
+  }
+
+  @override
+  Future<LessonModel> getLessonDetail({required String lessonId}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) {
+      throw Exception('Usuário não autenticado para ver detalhes da aula.');
+    }
+
+    final response = await dio.get(
+      '/mini-course-classes/$lessonId', // Correct endpoint as per request
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    // Assuming the API returns the lesson directly, not wrapped in 'data'
     return LessonModel.fromJson(response.data);
   }
 }

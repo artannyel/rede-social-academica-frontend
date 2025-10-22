@@ -31,4 +31,6 @@ abstract class MiniCourseRepository {
     required String description,
     required String youtubeUrl,
   });
+
+  Future<Either<Failure, Lesson>> getLessonDetail({required String lessonId});
 }

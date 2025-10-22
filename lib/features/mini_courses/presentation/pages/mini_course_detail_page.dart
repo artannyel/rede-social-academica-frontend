@@ -186,7 +186,7 @@ class _MiniCourseDetailView extends StatelessWidget {
                     ? const Icon(Icons.play_circle_outline)
                     : null,
                 onTap: lesson.youtubeUrl != null
-                    ? () => context.push('/lessons/player', extra: lesson)
+                    ? () => context.push('/lessons/${lesson.id}/player')
                     : null,
               ),
             );

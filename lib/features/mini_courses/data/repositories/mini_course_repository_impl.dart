@@ -132,4 +132,17 @@ class MiniCourseRepositoryImpl implements MiniCourseRepository {
       return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
     }
   }
+
+  @override
+  Future<Either<Failure, Lesson>> getLessonDetail({required String lessonId}) async {
+    try {
+      final lessonModel = await remoteDataSource.getLessonDetail(lessonId: lessonId);
+      return Right(lessonModel.toEntity());
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Não foi possível carregar os detalhes da aula.';
+      return Left(ServerFailure(message));
+    } on Exception catch (e) {
+      return Left(ServerFailure(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
 }

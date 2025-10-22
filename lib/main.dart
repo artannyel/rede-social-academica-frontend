@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:social_academic/features/mini_courses/domain/usecases/get_lesson_detail.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/get_my_mini_courses.dart';
 import 'package:social_academic/features/posts/domain/usecases/edit_post.dart';
 import 'package:social_academic/features/posts/domain/usecases/like_comment.dart';
@@ -237,6 +238,8 @@ class MyApp extends StatelessWidget {
             create: (context) => PublishMiniCourse(context.read<MiniCourseRepository>())),
         Provider<AddLessonToMiniCourse>(
             create: (context) => AddLessonToMiniCourse(context.read<MiniCourseRepository>())),
+        Provider<GetLessonDetail>(
+            create: (context) => GetLessonDetail(context.read<MiniCourseRepository>())),
 
         // Camada de Apresentação (Presentation) - Notifiers de Estado Global
         ChangeNotifierProvider<UserNotifier>(

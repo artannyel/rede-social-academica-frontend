@@ -17,7 +17,6 @@ import 'package:social_academic/features/profile/presentation/pages/edit_profile
 import 'package:social_academic/features/profile/presentation/pages/profile_page_provider.dart';
 import 'package:social_academic/features/profile/presentation/pages/user_profile_page.dart';
 import 'package:social_academic/features/splash/presentation/pages/splash_page.dart';
-import 'package:social_academic/features/mini_courses/domain/entities/lesson.dart';
 
 GoRouter appRouter(AuthNotifier authNotifier) {
   return GoRouter(
@@ -169,13 +168,13 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         },
       ),
       GoRoute(
-        path: '/lessons/player',
+        path: '/lessons/:lessonId/player', // Changed path to include lessonId
         name: 'lesson-player',
         pageBuilder: (context, state) {
-          final lesson = state.extra as Lesson;
+          final lessonId = state.pathParameters['lessonId']!; // Get lessonId from path parameters
           return CustomTransitionPage(
             key: state.pageKey,
-            child: LessonPlayerPage(lesson: lesson),
+            child: LessonPlayerPage(lessonId: lessonId), // Pass lessonId
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               const begin = Offset(0.0, 1.0);
               const end = Offset.zero;
