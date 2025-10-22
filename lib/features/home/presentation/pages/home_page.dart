@@ -7,19 +7,11 @@ import 'package:social_academic/features/mini_courses/presentation/providers/my_
 import 'package:social_academic/features/mini_courses/presentation/providers/mini_course_list_change_notifier.dart';
 import 'package:social_academic/app/core/theme/theme_notifier.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
-import 'package:social_academic/features/mini_courses/presentation/pages/mini_courses_page.dart';
-import 'package:social_academic/features/posts/presentation/pages/post_list_page.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+class HomePage extends StatelessWidget {
+  final StatefulNavigationShell navigationShell;
+  const HomePage({super.key, required this.navigationShell});
 
   // Títulos para a AppBar
   static const List<String> _appBarTitles = <String>[
@@ -27,16 +19,11 @@ class _HomePageState extends State<HomePage> {
     'Mini Cursos',
   ];
 
-  // Telas que serão exibidas
-  static const List<Widget> _widgetOptions = <Widget>[
-    PostListPage(),
-    MiniCoursesPage(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  void _onItemTapped(BuildContext context, int index) {
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
 
   @override
@@ -54,7 +41,7 @@ class _HomePageState extends State<HomePage> {
         // Lista de FloatingActionButtons que agora são construídos aqui para ter acesso ao `context`.
         final List<Widget?> floatingActionButtons = [
           FloatingActionButton(
-            onPressed: () => context.push('/posts/create'),
+            onPressed: () => context.push('/home/posts/create'),
             tooltip: 'Nova Publicação',
             child: const Icon(Icons.add),
           ),
@@ -80,14 +67,9 @@ class _HomePageState extends State<HomePage> {
           ),
         ];
 
-        final mainContent = IndexedStack(
-          index: _selectedIndex,
-          children: _widgetOptions,
-        );
-
         return Scaffold(
           appBar: AppBar(
-            title: Text(_appBarTitles[_selectedIndex]),
+            title: Text(_appBarTitles[navigationShell.currentIndex]),
             actions: [
               Consumer<UserNotifier>(
                 builder: (context, userNotifier, _) {
@@ -125,9 +107,10 @@ class _HomePageState extends State<HomePage> {
               ? Row(
                   children: [
                     NavigationRail(
-                      selectedIndex: _selectedIndex,
+                      selectedIndex: navigationShell.currentIndex,
                       backgroundColor: theme.canvasColor,
-                      onDestinationSelected: _onItemTapped,
+                      onDestinationSelected: (index) =>
+                          _onItemTapped(context, index),
                       labelType: isExtraWideScreen
                           ? NavigationRailLabelType.none
                           : NavigationRailLabelType.all,
@@ -153,10 +136,10 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     const VerticalDivider(thickness: 1, width: 1),
-                    Expanded(child: mainContent),
+                    Expanded(child: navigationShell),
                   ],
                 )
-              : mainContent,
+              : navigationShell,
           bottomNavigationBar: isWideScreen
               ? null
               : BottomNavigationBar(
@@ -170,12 +153,12 @@ class _HomePageState extends State<HomePage> {
                       label: 'Mini Cursos',
                     ),
                   ],
-                  currentIndex: _selectedIndex,
-                  onTap: _onItemTapped,
+                  currentIndex: navigationShell.currentIndex,
+                  onTap: (index) => _onItemTapped(context, index),
                 ),
           floatingActionButton: Padding(
             padding: EdgeInsets.only(right: isWideScreen ? 16.0 : 0.0),
-            child: floatingActionButtons[_selectedIndex],
+            child: floatingActionButtons[navigationShell.currentIndex],
           ),
         );
       },
