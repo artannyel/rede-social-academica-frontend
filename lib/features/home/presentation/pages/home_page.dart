@@ -43,6 +43,8 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
         const double breakpoint = 900;
         const double breakpoint2 = 1200;
 
@@ -124,11 +126,21 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     NavigationRail(
                       selectedIndex: _selectedIndex,
+                      backgroundColor: theme.canvasColor,
                       onDestinationSelected: _onItemTapped,
                       labelType: isExtraWideScreen
                           ? NavigationRailLabelType.none
                           : NavigationRailLabelType.all,
                       extended: isExtraWideScreen,
+                      selectedIconTheme: IconThemeData(color: colorScheme.primary),
+                      unselectedIconTheme: IconThemeData(color: colorScheme.onSurfaceVariant),
+                      selectedLabelTextStyle: TextStyle(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      unselectedLabelTextStyle: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                       destinations: const <NavigationRailDestination>[
                         NavigationRailDestination(
                           icon: Icon(Icons.article_outlined),
