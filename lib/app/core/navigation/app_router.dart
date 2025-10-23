@@ -48,7 +48,7 @@ GoRouter appRouter(AuthNotifier authNotifier) {
       if (isLoggedIn) {
         // Se o usuário está logado e na splash screen, redireciona para o lugar certo.
         if (isSplashRoute) {
-          return isEmailVerified ? '/home' : '/verify-email';
+          return isEmailVerified ? '/posts' : '/verify-email';
         }
 
         // Se o e-mail não foi verificado e ele não está na tela de verificação, redirecione-o.
@@ -57,7 +57,7 @@ GoRouter appRouter(AuthNotifier authNotifier) {
         }
         // Se o e-mail foi verificado e ele está em uma rota de autenticação/verificação, mande-o para a home.
         if (isEmailVerified && (isAuthRoute || isVerifying)) {
-          return '/home';
+          return '/posts';
         }
       }
 
@@ -82,12 +82,12 @@ GoRouter appRouter(AuthNotifier authNotifier) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/home',
+                path: '/posts',
                 name: 'home',
                 builder: (context, state) => const PostListPage(),
                 routes: [
                   GoRoute(
-                    path: 'posts/create',
+                    path: 'create',
                     name: 'create-post',
                     pageBuilder: (context, state) {
                       return CustomTransitionPage(
@@ -140,6 +140,18 @@ GoRouter appRouter(AuthNotifier authNotifier) {
                           );
                         },
                       ),
+                      GoRoute(
+                        path: 'lessons/:lessonId/player',
+                        name: 'lesson-player',
+                        pageBuilder: (context, state) {
+                          final lessonId = state.pathParameters['lessonId']!;
+                          return CustomTransitionPage(
+                            key: state.pageKey,
+                            child: LessonPlayerPage(lessonId: lessonId),
+                            transitionsBuilder: _slideUpTransition,
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ],
@@ -150,18 +162,6 @@ GoRouter appRouter(AuthNotifier authNotifier) {
       ),
 
       // Rotas que são exibidas SOBRE a navegação principal
-      GoRoute(
-        path: '/lessons/:lessonId/player',
-        name: 'lesson-player',
-        pageBuilder: (context, state) {
-          final lessonId = state.pathParameters['lessonId']!;
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: LessonPlayerPage(lessonId: lessonId),
-            transitionsBuilder: _slideUpTransition,
-          );
-        },
-      ),
       GoRoute(
         path: '/posts/:id/edit',
         name: 'edit-post',
@@ -259,11 +259,11 @@ Widget _slideUpTransition(
 ) {
   const begin = Offset(0.0, 1.0);
   const end = Offset.zero;
-  final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
-  return SlideTransition(
-    position: animation.drive(tween),
-    child: child,
-  );
+  final tween = Tween(
+    begin: begin,
+    end: end,
+  ).chain(CurveTween(curve: Curves.easeInOut));
+  return SlideTransition(position: animation.drive(tween), child: child);
 }
 
 Widget _slideRightToLeftTransition(
@@ -274,11 +274,11 @@ Widget _slideRightToLeftTransition(
 ) {
   const begin = Offset(1.0, 0.0);
   const end = Offset.zero;
-  final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
-  return SlideTransition(
-    position: animation.drive(tween),
-    child: child,
-  );
+  final tween = Tween(
+    begin: begin,
+    end: end,
+  ).chain(CurveTween(curve: Curves.easeInOut));
+  return SlideTransition(position: animation.drive(tween), child: child);
 }
 
 Widget _slideLeftToRightTransition(
@@ -289,9 +289,9 @@ Widget _slideLeftToRightTransition(
 ) {
   const begin = Offset(-1.0, 0.0);
   const end = Offset.zero;
-  final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
-  return SlideTransition(
-    position: animation.drive(tween),
-    child: child,
-  );
+  final tween = Tween(
+    begin: begin,
+    end: end,
+  ).chain(CurveTween(curve: Curves.easeInOut));
+  return SlideTransition(position: animation.drive(tween), child: child);
 }

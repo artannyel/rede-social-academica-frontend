@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:social_academic/features/mini_courses/domain/entities/mini_course.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/enroll_mini_course.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/get_mini_courses.dart';
 import 'package:social_academic/features/mini_courses/domain/usecases/get_my_mini_courses.dart';
@@ -40,6 +42,25 @@ class MiniCoursesPage extends StatelessWidget {
           ),
           body: const TabBarView(
             children: [MiniCourseListPage(), MyMiniCourseListPage()],
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () async {
+              final newMiniCourse = await context.push<MiniCourse>(
+                '/mini-courses/create',
+              );
+              if (newMiniCourse != null && context.mounted) {
+                // Adiciona o novo curso na lista de "Todos"
+                context.read<MiniCourseListChangeNotifier>().addNewMiniCourse(
+                      newMiniCourse,
+                    );
+                // Adiciona o novo curso na lista de "Meus Cursos"
+                context.read<MyMiniCourseListChangeNotifier>().addMiniCourse(
+                      newMiniCourse,
+                    );
+              }
+            },
+            tooltip: 'Novo Mini Curso',
+            child: const Icon(Icons.school_outlined),
           ),
         ),
       ),

@@ -2,9 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:social_academic/features/mini_courses/domain/entities/mini_course.dart';
-import 'package:social_academic/features/mini_courses/presentation/providers/my_mini_course_list_change_notifier.dart';
-import 'package:social_academic/features/mini_courses/presentation/providers/mini_course_list_change_notifier.dart';
 import 'package:social_academic/app/core/theme/theme_notifier.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
@@ -37,35 +34,6 @@ class HomePage extends StatelessWidget {
 
         final bool isWideScreen = constraints.maxWidth > breakpoint;
         final bool isExtraWideScreen = constraints.maxWidth > breakpoint2;
-
-        // Lista de FloatingActionButtons que agora são construídos aqui para ter acesso ao `context`.
-        final List<Widget?> floatingActionButtons = [
-          FloatingActionButton(
-            onPressed: () => context.push('/home/posts/create'),
-            tooltip: 'Nova Publicação',
-            child: const Icon(Icons.add),
-          ),
-          FloatingActionButton(
-            onPressed: () async {
-              final newMiniCourse = await context.push<MiniCourse>(
-                '/mini-courses/create',
-              );
-              if (newMiniCourse != null && context.mounted) {
-                // Adiciona o novo curso na lista de "Todos"
-                context.read<MiniCourseListChangeNotifier>().addNewMiniCourse(
-                  newMiniCourse,
-                );
-                // Adiciona o novo curso na lista de "Meus Cursos"
-                // O `read` funciona pois o provider foi criado na MiniCoursesPage, que já está na árvore.
-                context.read<MyMiniCourseListChangeNotifier>().addMiniCourse(
-                  newMiniCourse,
-                );
-              }
-            },
-            tooltip: 'Novo Mini Curso',
-            child: const Icon(Icons.school_outlined),
-          ),
-        ];
 
         return Scaffold(
           appBar: AppBar(
@@ -156,10 +124,6 @@ class HomePage extends StatelessWidget {
                   currentIndex: navigationShell.currentIndex,
                   onTap: (index) => _onItemTapped(context, index),
                 ),
-          floatingActionButton: Padding(
-            padding: EdgeInsets.only(right: isWideScreen ? 16.0 : 0.0),
-            child: floatingActionButtons[navigationShell.currentIndex],
-          ),
         );
       },
     );
