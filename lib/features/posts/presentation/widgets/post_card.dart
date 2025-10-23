@@ -3,9 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
-import 'package:social_academic/shared/helpers/time_ago_helper.dart';
-import 'package:social_academic/shared/helpers/color_helper.dart';
+import 'package:social_academic/features/posts/presentation/pages/post_comments_page.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_images_viewer.dart';
+import 'package:social_academic/shared/helpers/color_helper.dart';
+import 'package:social_academic/shared/helpers/time_ago_helper.dart';
 import 'package:social_academic/shared/widgets/user_avatar.dart';
 
 class PostCard extends StatelessWidget {
@@ -67,7 +68,8 @@ class PostCard extends StatelessWidget {
     final isCurrentUserPost = post.user.id == currentUserId;
 
     // Considera editado se a diferença for maior que 5 segundos.
-    final bool isEdited = post.updatedAt.difference(post.createdAt).inSeconds > 5;
+    final bool isEdited =
+        post.updatedAt.difference(post.createdAt).inSeconds > 5;
 
     void navigateToProfile() {
       if (isCurrentUserPost) {
@@ -110,7 +112,15 @@ class PostCard extends StatelessWidget {
                         ),
                       ),
                       if (isEdited)
-                        Text(' (editado)', style: textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic)),
+                        Text(
+                          ' (editado)',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
                     ],
                   ),
                 ],
@@ -156,8 +166,10 @@ class PostCard extends StatelessWidget {
                   value: 'delete',
                   child: ListTile(
                     leading: Icon(Icons.archive_outlined, color: Colors.red),
-                    title:
-                        Text('Arquivar', style: TextStyle(color: Colors.red)),
+                    title: Text(
+                      'Arquivar',
+                      style: TextStyle(color: Colors.red),
+                    ),
                   ),
                 ),
             ],
@@ -185,9 +197,14 @@ class PostCard extends StatelessWidget {
                 const PopupMenuItem<String>(
                   value: 'force_delete',
                   child: ListTile(
-                    leading: Icon(Icons.delete_forever_outlined, color: Colors.red),
-                    title: Text('Excluir Permanentemente',
-                        style: TextStyle(color: Colors.red)),
+                    leading: Icon(
+                      Icons.delete_forever_outlined,
+                      color: Colors.red,
+                    ),
+                    title: Text(
+                      'Excluir Permanentemente',
+                      style: TextStyle(color: Colors.red),
+                    ),
                   ),
                 ),
             ],
@@ -248,7 +265,33 @@ class PostCard extends StatelessWidget {
               icon: Icons.comment_outlined,
               label: post.commentsCount.toString(),
               onPressed: () {
-                context.push('/posts/${post.id}/comments');
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (sheetContext) {
+                    return DraggableScrollableSheet(
+                      initialChildSize: 1,
+                      expand: true,
+                      minChildSize: 0.3,
+                      builder: (_, scrollController) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(16),
+                              topRight: Radius.circular(16),
+                            ),
+                          ),
+                          child: PostCommentsPage(
+                            postId: post.id,
+                            scrollController: scrollController,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
               },
               disabled: isArchived,
             ),

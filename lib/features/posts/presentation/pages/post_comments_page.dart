@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:social_academic/features/posts/domain/usecases/create_comment.dart';
+import 'package:social_academic/features/posts/domain/usecases/get_comments.dart';
+import 'package:social_academic/features/posts/domain/usecases/like_comment.dart';
 import 'package:social_academic/features/posts/presentation/providers/comment_change_notifier.dart';
 import 'package:social_academic/features/posts/presentation/widgets/comment_card.dart';
 import 'package:social_academic/features/posts/presentation/widgets/comment_card_skeleton.dart';
@@ -8,31 +11,37 @@ import 'package:social_academic/shared/widgets/responsive_layout.dart';
 
 class PostCommentsPage extends StatelessWidget {
   final String postId;
-  const PostCommentsPage({super.key, required this.postId});
+  final ScrollController? scrollController;
+
+  const PostCommentsPage({
+    super.key,
+    required this.postId,
+    this.scrollController,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => CommentChangeNotifier(
+      create: (context) => CommentChangeNotifier( // Use context.read() para obter as dependências
         postId: postId,
-        getComments: context.read(),
-        createComment: context.read(),
-        likeComment: context.read(),
+        getComments: context.read<GetComments>(),
+        createComment: context.read<CreateComment>(),
+        likeComment: context.read<LikeComment>(),
       ),
-      child: const _PostCommentsView(),
+      child: _PostCommentsView(scrollController: scrollController),
     );
   }
 }
 
 class _PostCommentsView extends StatefulWidget {
-  const _PostCommentsView();
+  final ScrollController? scrollController;
+  const _PostCommentsView({this.scrollController});
 
   @override
   State<_PostCommentsView> createState() => _PostCommentsViewState();
 }
 
 class _PostCommentsViewState extends State<_PostCommentsView> {
-  final _scrollController = ScrollController();
   final _commentController = TextEditingController();
   final _commentFocusNode = FocusNode();
 
@@ -42,9 +51,10 @@ class _PostCommentsViewState extends State<_PostCommentsView> {
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 100) {
+    // Usa o scrollController recebido ou cria um novo se não for fornecido.
+    (widget.scrollController ?? ScrollController()).addListener(() {
+      if ((widget.scrollController ?? ScrollController()).position.pixels >=
+          (widget.scrollController ?? ScrollController()).position.maxScrollExtent - 100) {
         context.read<CommentChangeNotifier>().fetchMoreComments();
       }
     });
@@ -52,7 +62,7 @@ class _PostCommentsViewState extends State<_PostCommentsView> {
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    // O widget.scrollController é gerenciado pelo DraggableScrollableSheet, não precisa de dispose aqui.
     _commentController.dispose();
     _commentFocusNode.dispose();
     super.dispose();
@@ -95,25 +105,44 @@ class _PostCommentsViewState extends State<_PostCommentsView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Comentários'),
+    // O widget agora é um Column que se adapta ao BottomSheet.
+    // O Padding garante que o conteúdo não fique sob a "notch" ou gestos do sistema.
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      resizeToAvoidBottomInset: false,
-      body: Consumer<CommentChangeNotifier>(
-        builder: (context, notifier, child) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom),
-            child: Column(
-              children: [
-                Expanded(
-                  child: _buildCommentsList(notifier),
-                ),
-                _buildCommentInputField(notifier),
-              ],
+      child: Column(
+        children: [
+          // "Handle" para indicar que o sheet é arrastável
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-          );
-        },
+          ),
+          const Text('Comentários', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Divider(),
+          // O Consumer agora envolve apenas a parte que muda
+          Consumer<CommentChangeNotifier>(
+            builder: (context, notifier, child) {              
+              return Expanded(
+                child: Column( // A Column interna agora pode se expandir
+                    children: [
+                      Expanded(
+                        child: _buildCommentsList(notifier),
+                      ),
+                      _buildCommentInputField(notifier),
+                    ],
+                  ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -141,7 +170,7 @@ class _PostCommentsViewState extends State<_PostCommentsView> {
     return RefreshIndicator(
       onRefresh: () => notifier.fetchInitialComments(),
       child: ListView.builder(
-        controller: _scrollController,
+        controller: widget.scrollController, // Usa o controller recebido
         padding: const EdgeInsets.all(8.0),
         itemCount:
             notifier.comments.length + (notifier.hasMorePages ? 1 : 0),
