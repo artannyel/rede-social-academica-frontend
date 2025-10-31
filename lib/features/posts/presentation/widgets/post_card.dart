@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:social_academic/features/authentication/presentation/provider/user_notifier.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
 import 'package:social_academic/features/posts/presentation/pages/post_comments_page.dart';
 import 'package:social_academic/features/posts/presentation/widgets/post_images_viewer.dart';
@@ -300,7 +301,15 @@ class PostCard extends StatelessWidget {
               icon: Icons.share_outlined,
               label: 'Compartilhar',
               onPressed: () {
-                // TODO: Implementar lógica de compartilhar
+                final postUrl = 'https://rede-social-academica.web.app/posts/${post.id}';
+                final shareText =
+                    'Confira a publicação de ${post.user.name} no Social Academic!\n\n$postUrl';
+                SharePlus.instance.share(
+                  ShareParams(
+                    text: shareText,
+                    subject: 'Publicação de ${post.user.name}',
+                  ),
+                );
               },
               disabled: isArchived,
             ),

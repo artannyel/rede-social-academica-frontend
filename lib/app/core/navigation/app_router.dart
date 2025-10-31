@@ -13,6 +13,7 @@ import 'package:social_academic/features/posts/presentation/pages/create_post_pa
 import 'package:social_academic/features/mini_courses/presentation/pages/create_mini_course_page.dart';
 import 'package:social_academic/features/posts/domain/entities/post.dart';
 import 'package:social_academic/features/posts/presentation/pages/edit_post_page.dart';
+import 'package:social_academic/features/posts/presentation/pages/post_detail_page.dart';
 import 'package:social_academic/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:social_academic/features/profile/presentation/pages/profile_page_provider.dart';
 import 'package:social_academic/features/posts/presentation/pages/post_list_page.dart';
@@ -161,6 +162,13 @@ GoRouter appRouter(AuthNotifier authNotifier) {
       ),
 
       // Rotas que são exibidas SOBRE a navegação principal
+      GoRoute(
+        path: '/posts/:id',
+        builder: (context, state) {
+          final postId = state.pathParameters['id']!;
+          return PostDetailPage(postId: postId);
+        },
+      ),
       GoRoute(
         path: '/posts/:id/edit',
         name: 'edit-post',

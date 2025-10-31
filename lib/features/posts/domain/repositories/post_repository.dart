@@ -37,6 +37,9 @@ abstract class PostRepository {
     required int page,
   });
 
+  /// Busca um post específico pelo ID.
+  Future<Either<Failure, Post>> getPostById({required String postId});
+
   /// Busca uma lista paginada dos posts do usuário logado.
   Future<Either<Failure, PaginatedResponse<Post>>> getMyPosts({
     required int page,

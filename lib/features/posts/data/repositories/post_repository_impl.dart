@@ -213,6 +213,26 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
+  Future<Either<Failure, Post>> getPostById({required String postId}) async {
+    try {
+      final postModel = await remoteDataSource.getPostById(postId: postId);
+      return Right(postModel.toEntity());
+    } on DioException catch (e) {
+      log('DioException in getPostById: ${e.response?.data}');
+      String errorMessage = 'Não foi possível buscar a publicação.';
+      if (e.response?.data is Map<String, dynamic>) {
+        errorMessage = e.response!.data['message'] ?? errorMessage;
+      }
+      return Left(ServerFailure(errorMessage));
+    } catch (e, stackTrace) {
+      log('Unexpected error in getPostById', error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(
+        'Ocorreu um erro inesperado ao buscar a publicação: ${e.toString()}',
+      ));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> likePost({required String postId}) async {
     try {
       await remoteDataSource.likePost(postId: postId);

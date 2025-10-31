@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:social_academic/app/core/data/models/paginated_response.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:social_academic/features/posts/data/models/comment_model.dart';
 import 'package:social_academic/features/posts/data/models/post_model.dart';
@@ -28,23 +27,20 @@ abstract class PostRemoteDataSource {
 
   Future<void> deletePost({required String postId});
 
-  Future<PaginatedResponse<PostModel>> getArchivedPosts({
-    required int page,
-  });
+  Future<PaginatedResponse<PostModel>> getArchivedPosts({required int page});
 
   Future<void> restorePost({required String postId});
 
   Future<void> forceDeletePost({required String postId});
 
   /// Busca uma lista paginada de posts.
-  Future<PaginatedResponse<PostModel>> getPosts({
-    required int page,
-  });
+  Future<PaginatedResponse<PostModel>> getPosts({required int page});
+
+  /// Busca um post específico pelo ID.
+  Future<PostModel> getPostById({required String postId});
 
   /// Busca uma lista paginada dos posts do usuário logado.
-  Future<PaginatedResponse<PostModel>> getMyPosts({
-    required int page,
-  });
+  Future<PaginatedResponse<PostModel>> getMyPosts({required int page});
 
   /// Curte ou descurte uma publicação.
   Future<void> likePost({required String postId});
@@ -108,8 +104,13 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           MapEntry(
             'images[]',
             // Usamos fromBytes, que funciona tanto em mobile quanto na web.
-            MultipartFile.fromBytes(bytes,
-                filename: fileName, contentType: mimeType != null ? MediaType.parse(mimeType) : null),
+            MultipartFile.fromBytes(
+              bytes,
+              filename: fileName,
+              contentType: mimeType != null
+                  ? DioMediaType.parse(mimeType)
+                  : null,
+            ),
           ),
         );
       }
@@ -165,8 +166,13 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
         formData.files.add(
           MapEntry(
             'images[]',
-            MultipartFile.fromBytes(bytes,
-                filename: fileName, contentType: mimeType != null ? MediaType.parse(mimeType) : null),
+            MultipartFile.fromBytes(
+              bytes,
+              filename: fileName,
+              contentType: mimeType != null
+                  ? DioMediaType.parse(mimeType)
+                  : null,
+            ),
           ),
         );
       }
@@ -192,8 +198,9 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   }
 
   @override
-  Future<PaginatedResponse<PostModel>> getArchivedPosts(
-      {required int page}) async {
+  Future<PaginatedResponse<PostModel>> getArchivedPosts({
+    required int page,
+  }) async {
     final token = await firebaseAuth.currentUser?.getIdToken();
     if (token == null) throw Exception('Usuário não autenticado');
 
@@ -245,6 +252,19 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   }
 
   @override
+  Future<PostModel> getPostById({required String postId}) async {
+    final token = await firebaseAuth.currentUser?.getIdToken();
+    if (token == null) throw Exception('Usuário não autenticado');
+
+    final response = await dio.get(
+      '/posts/$postId',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    return PostModel.fromJson(response.data);
+  }
+
+  @override
   Future<void> likePost({required String postId}) async {
     final token = await firebaseAuth.currentUser?.getIdToken();
     if (token == null) throw Exception('Usuário não autenticado');
@@ -275,9 +295,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     final token = await firebaseAuth.currentUser?.getIdToken();
     if (token == null) throw Exception('Usuário não autenticado');
 
-    final data = {
-      'comment': comment,
-    };
+    final data = {'comment': comment};
 
     if (parentCommentId != null) {
       data['post_comment_id'] = parentCommentId;
@@ -291,8 +309,10 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   }
 
   @override
-  Future<PaginatedResponse<CommentModel>> getComments(
-      {required String postId, required int page}) async {
+  Future<PaginatedResponse<CommentModel>> getComments({
+    required String postId,
+    required int page,
+  }) async {
     final token = await firebaseAuth.currentUser?.getIdToken();
     if (token == null) throw Exception('Usuário não autenticado');
 
